@@ -343,16 +343,19 @@ Today's date: ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'nume
 function getBestVoice() {
   const v = speechSynthesis.getVoices();
   const order = [
-    x => x.name === 'Samantha',
-    x => x.name === 'Karen',
-    x => x.name === 'Moira',
-    x => x.name.includes('Google US English'),
+    x => x.name.includes('Google US English Female'),
     x => x.name.includes('Google UK English Female'),
-    x => x.lang==='en-US' && x.localService,
-    x => x.lang.startsWith('en') && x.localService,
+    x => x.name.includes('Microsoft Aria'),
+    x => x.name.includes('Microsoft Jenny'),
+    x => x.name.includes('Samantha'),
+    x => x.name.includes('Karen'),
+    x => x.lang === 'en-US',
     x => x.lang.startsWith('en'),
   ];
-  for (const fn of order) { const found = v.find(fn); if (found) return found; }
+  for (const fn of order) {
+    const found = v.find(fn);
+    if (found) return found;
+  }
   return null;
 }
 
@@ -361,8 +364,7 @@ function speakText(text, onDone) {
   speechSynthesis.cancel();
   const clean = text.replace(/\[STORE:[^\]]+\]/g,'').replace(/[*_#`•\-]/g,' ').replace(/\s+/g,' ').trim();
   const utt = new SpeechSynthesisUtterance(clean);
-  utt.rate=0.91; utt.pitch=1.0; utt.volume=1.0;
-  const go = () => {
+utt.rate = 0.98; utt.pitch = 1.08; utt.volume = 1.0;  const go = () => {
     const v = getBestVoice(); if(v) utt.voice=v;
     utt.onend=()=>onDone&&onDone();
     utt.onerror=()=>onDone&&onDone();
