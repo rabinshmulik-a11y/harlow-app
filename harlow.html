@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Harlow — Household Butler</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    height: 100dvh; display: flex; flex-direction: column;
+    background: linear-gradient(160deg,#0b0f1a 0%,#131c30 60%,#0b0f1a 100%);
+    font-family: -apple-system, 'Inter', system-ui, sans-serif;
+    color: #fff; overflow: hidden;
+  }
+  @keyframes pulse    { 0%,100%{transform:scale(1)}  50%{transform:scale(1.09)} }
+  @keyframes breathe  { 0%,100%{transform:scale(1)}  50%{transform:scale(1.05)} }
+  @keyframes thinking { 0%{opacity:.3} 50%{opacity:1} 100%{opacity:.3} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes dotPulse { 0%,80%,100%{transform:scale(0);opacity:0} 40%{transform:scale(1);opacity:1} }
+
+  /* HOME */
+  #home {
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:32px; animation:fadeUp .5s ease;
+  }
+  #home h1 { font-size:30px; font-weight:800; letter-spacing:-.8px; margin:16px 0 8px; }
+  #home p  { font-size:15px; color:rgba(255,255,255,.4); text-align:center; line-height:1.6; max-width:300px; margin-bottom:48px; }
+  #beginBtn {
+    background:linear-gradient(135deg,#c9a030,#7a5410);
+    color:#fff; border:none; border-radius:50px;
+    padding:15px 44px; font-size:17px; font-weight:700;
+    cursor:pointer; box-shadow:0 8px 28px rgba(200,160,48,.35);
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* CHAT */
+  #chat { flex:1; display:none; flex-direction:column; height:100%; }
+  #header {
+    padding:18px 20px 10px; display:flex;
+    align-items:center; justify-content:space-between; flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,.05);
+  }
+  #header .title { font-size:20px; font-weight:800; letter-spacing:-.5px; }
+  #header .sub   { font-size:11px; color:rgba(255,255,255,.3); margin-top:1px; }
+  #statusDot { width:8px; height:8px; border-radius:50%; background:#c9a030; transition:background .3s; }
+  #muteBtn {
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+    border-radius:20px; padding:5px 12px; font-size:12px; color:rgba(255,255,255,.6);
+    cursor:pointer; margin-right:10px; -webkit-tap-highlight-color:transparent;
+  }
+  #muteBtn.muted { background:rgba(255,100,100,.15); border-color:rgba(255,100,100,.3); color:#fca5a5; }
+
+  /* Messages */
+  #messages { flex:1; overflow-y:auto; padding:14px 16px; scroll-behavior:smooth; }
+  #messages::-webkit-scrollbar { width:0; }
+  .bubble-wrap { display:flex; margin-bottom:10px; animation:fadeUp .25s ease; }
+  .bubble-wrap.user  { justify-content:flex-end; }
+  .bubble-wrap.bot   { justify-content:flex-start; }
+  .bubble {
+    max-width:82%; padding:11px 15px; font-size:14px; line-height:1.58;
+    border-radius:18px;
+  }
+  .bubble.user {
+    background:linear-gradient(135deg,#c9a030,#7a5410);
+    border-radius:18px 18px 4px 18px;
+  }
+  .bubble.bot {
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:18px 18px 18px 4px;
+  }
+  .bubble ul { margin:8px 0 4px 18px; }
+  .bubble ul li { margin-bottom:4px; }
+  .bubble p  { margin-bottom:6px; }
+  .bubble p:last-child { margin-bottom:0; }
+  .store-link {
+    display:inline-block; margin:4px 4px 0 0;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
+    border-radius:20px; padding:5px 12px; font-size:13px;
+    color:#d4b060; text-decoration:none; cursor:pointer;
+    transition:background .2s;
+  }
+  .store-link:hover { background:rgba(255,255,255,.18); }
+  .typing-indicator {
+    display:flex; align-items:center; gap:5px;
+    padding:12px 16px; background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:18px 18px 18px 4px; width:fit-content;
+  }
+  .typing-indicator span {
+    width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.4);
+    animation:dotPulse 1.4s ease-in-out infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay:.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay:.4s; }
+  #liveText {
+    text-align:right; color:rgba(212,168,48,.55);
+    font-size:13px; font-style:italic; margin:0 0 6px; padding:0 4px;
+    min-height:18px;
+  }
+
+  /* Controls */
+  #controls {
+    flex-shrink:0; padding:6px 16px 20px;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  #orb {
+    width:110px; height:110px; border-radius:50%; border:none;
+    background:radial-gradient(circle at 38% 32%,#d4a843,#7a5410);
+    box-shadow:0 0 40px rgba(212,168,67,.3), 0 6px 24px rgba(0,0,0,.4);
+    font-size:30px; cursor:pointer; transition:box-shadow .3s, background .3s;
+    -webkit-tap-highlight-color:transparent; display:flex;
+    align-items:center; justify-content:center;
+  }
+  #orb.listening {
+    background:radial-gradient(circle at 38% 32%,#f0d070,#c9a030);
+    box-shadow:0 0 70px rgba(240,208,80,.65),0 6px 24px rgba(0,0,0,.4);
+    animation:pulse 1.1s ease-in-out infinite;
+  }
+  #orb.thinking {
+    background:radial-gradient(circle at 38% 32%,#7090d0,#2a4a90);
+    box-shadow:0 0 60px rgba(80,120,220,.5),0 6px 24px rgba(0,0,0,.4);
+    animation:breathe 1.5s ease-in-out infinite;
+  }
+  #orb.speaking {
+    background:radial-gradient(circle at 38% 32%,#60d090,#1a7a48);
+    box-shadow:0 0 60px rgba(60,200,120,.5),0 6px 24px rgba(0,0,0,.4);
+    animation:breathe .9s ease-in-out infinite;
+  }
+  #orbLabel { font-size:12px; color:rgba(255,255,255,.28); letter-spacing:.3px; min-height:16px; }
+  #inputRow { display:flex; gap:8px; width:100%; max-width:480px; }
+  #textInput {
+    flex:1; background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.1); border-radius:12px;
+    padding:11px 14px; color:#fff; font-size:15px; font-family:inherit;
+  }
+  #textInput:focus { outline:none; border-color:rgba(201,160,48,.5); }
+  #sendBtn {
+    background:linear-gradient(135deg,#c9a030,#7a5410);
+    border:none; border-radius:12px; padding:11px 18px;
+    color:#fff; font-size:20px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #sendBtn:disabled { background:rgba(255,255,255,.06); color:rgba(255,255,255,.2); cursor:default; }
+  #errorMsg {
+    display:none; margin:0 0 6px; padding:9px 13px;
+    background:rgba(220,50,50,.15); border:1px solid rgba(220,50,50,.3);
+    border-radius:10px; font-size:13px; color:#fca5a5; text-align:center; width:100%; max-width:480px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home">
+  <div style="font-size:52px">🏠</div>
+  <h1>Harlow</h1>
+  <p>Your household runs smoother when someone's paying attention.</p>
+  <button id="beginBtn" onclick="beginSession()">Begin</button>
+</div>
+
+<!-- CHAT -->
+<div id="chat">
+  <div id="header">
+    <div>
+      <div class="title">Harlow</div>
+      <div class="sub">Household butler</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="muteBtn" onclick="toggleMute()">🔊 Sound on</button>
+      <div id="statusDot"></div>
+    </div>
+  </div>
+
+  <div id="messages">
+    <div id="liveText"></div>
+  </div>
+
+  <div id="controls">
+    <div id="errorMsg"></div>
+    <button id="orb" onclick="handleOrb()">🎙</button>
+    <div id="orbLabel">Tap to speak</div>
+    <div id="inputRow">
+      <input id="textInput" type="text" placeholder="Or type here…" onkeydown="handleKey(event)"/>
+      <button id="sendBtn" onclick="sendFromInput()">↑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SYSTEM = `You are Harlow, a warm and intelligent household butler AI. Your job is to learn this household deeply and help manage it proactively.
+
+You learn: number of people, dietary needs, preferred stores, budget, consumption patterns, upcoming events and holidays (Jewish, Christian, national, personal).
+You anticipate: when things run out, what to order, when to order it, what occasions are coming up.
+You help: plan menus for guests, suggest shopping lists, track spending, remind about holidays and events.
+
+FORMATTING RULES — critical:
+- When listing items, always use a proper list (one item per line starting with a dash or number). Never run items together in a paragraph.
+- When mentioning a store where something can be bought, always include a clickable link placeholder in this exact format: [STORE:StoreName:SearchTerm] — for example [STORE:HEB:chicken breast] or [STORE:Walmart:grape juice]
+- Keep replies conversational and warm — 2 to 4 sentences plus any lists or links
+- Never use asterisks, hashtags, or markdown bold. Plain text only.
+- Always end with one natural follow-up question.
+
+On first message, introduce yourself briefly and ask one warm opening question.`;
+
+let messages = [];
+let status = 'idle';
+let muted = false;
+let recognition = null;
+let currentUtt = null;
+
+// ── Voice ──
+function getBestVoice() {
+  const voices = speechSynthesis.getVoices();
+  const picks = [
+    v => v.name === 'Samantha',
+    v => v.name === 'Karen',
+    v => v.name === 'Moira',
+    v => v.name.includes('Google US English'),
+    v => v.name.includes('Google UK English Female'),
+    v => v.lang === 'en-US' && v.localService && !v.name.includes('Google'),
+    v => v.lang.startsWith('en') && v.localService,
+    v => v.lang.startsWith('en'),
+  ];
+  for (const fn of picks) { const v = voices.find(fn); if (v) return v; }
+  return null;
+}
+
+function speakText(text, onDone) {
+  if (muted) { onDone && onDone(); return; }
+  speechSynthesis.cancel();
+  const clean = text.replace(/\[STORE:[^\]]+\]/g,'').replace(/[*_#`•]/g,' ').replace(/\s+/g,' ').trim();
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.rate = 0.92; utt.pitch = 1.0; utt.volume = 1.0;
+  const doSpeak = () => {
+    const v = getBestVoice();
+    if (v) utt.voice = v;
+    utt.onend = () => onDone && onDone();
+    utt.onerror = () => onDone && onDone();
+    speechSynthesis.speak(utt);
+  };
+  if (speechSynthesis.getVoices().length) doSpeak();
+  else { speechSynthesis.onvoiceschanged = doSpeak; }
+  currentUtt = utt;
+}
+
+function toggleMute() {
+  muted = !muted;
+  const btn = document.getElementById('muteBtn');
+  if (muted) {
+    speechSynthesis.cancel();
+    btn.textContent = '🔇 Muted';
+    btn.classList.add('muted');
+  } else {
+    btn.textContent = '🔊 Sound on';
+    btn.classList.remove('muted');
+  }
+}
+
+// ── Format reply into HTML ──
+function formatMessage(text) {
+  // Replace store links
+  text = text.replace(/\[STORE:([^:]+):([^\]]+)\]/g, (_, store, term) => {
+    const urls = {
+      'HEB': `https://www.heb.com/search/?q=${encodeURIComponent(term)}`,
+      'Walmart': `https://www.walmart.com/search?q=${encodeURIComponent(term)}`,
+      'Kroger': `https://www.kroger.com/search?query=${encodeURIComponent(term)}`,
+      'Costco': `https://www.costco.com/CatalogSearch?keyword=${encodeURIComponent(term)}`,
+      'Amazon': `https://www.amazon.com/s?k=${encodeURIComponent(term)}`,
+      'Target': `https://www.target.com/s?searchTerm=${encodeURIComponent(term)}`,
+      'Instacart': `https://www.instacart.com/store/s?k=${encodeURIComponent(term)}`,
+    };
+    const url = urls[store] || `https://www.google.com/search?q=${encodeURIComponent(store+' '+term)}`;
+    return `<a class="store-link" href="${url}" target="_blank">🛒 ${store}</a>`;
+  });
+
+  // Detect lines that are list items (start with - or number or •)
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) { if (inList) { html += '</ul>'; inList = false; } continue; }
+    const listMatch = line.match(/^[-•*]\s+(.+)/) || line.match(/^\d+[.)]\s+(.+)/);
+    if (listMatch) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += `<li>${listMatch[1]}</li>`;
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p>${line}</p>`;
+    }
+  }
+  if (inList) html += '</ul>';
+  return html;
+}
+
+// ── Claude API ──
+async function askClaude(msgs) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, system:SYSTEM, messages:msgs })
+  });
+  const data = await res.json();
+  return data.content?.map(b => b.text||'').join('') || "I'm having trouble connecting right now.";
+}
+
+// ── Status helpers ──
+function setStatus(s) {
+  status = s;
+  const orb = document.getElementById('orb');
+  const dot = document.getElementById('statusDot');
+  const label = document.getElementById('orbLabel');
+  const icons = { idle:'🎙', listening:'👂', thinking:'·', speaking:'♪' };
+  const labels = { idle:'Tap to speak', listening:'Listening… tap to stop', thinking:'Thinking…', speaking:'Tap to stop' };
+  const dots = { idle:'#c9a030', listening:'#f0d070', thinking:'#4a6fa5', speaking:'#2d8c5a' };
+  orb.className = s === 'idle' ? '' : s;
+  orb.textContent = icons[s];
+  dot.style.background = dots[s];
+  label.textContent = labels[s];
+  document.getElementById('sendBtn').disabled = (s === 'thinking');
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display='none', 4000);
+}
+
+// ── Add message bubble ──
+function addBubble(role, html, isHTML=false) {
+  const msgs = document.getElementById('messages');
+  const liveEl = document.getElementById('liveText');
+  const wrap = document.createElement('div');
+  wrap.className = `bubble-wrap ${role}`;
+  const bub = document.createElement('div');
+  bub.className = `bubble ${role}`;
+  if (isHTML) bub.innerHTML = html;
+  else bub.textContent = html;
+  wrap.appendChild(bub);
+  msgs.insertBefore(wrap, liveEl);
+  liveEl.scrollIntoView({ behavior:'smooth' });
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const liveEl = document.getElementById('liveText');
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap bot'; wrap.id = 'typingWrap';
+  wrap.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  msgs.insertBefore(wrap, liveEl);
+  liveEl.scrollIntoView({ behavior:'smooth' });
+}
+function hideTyping() { document.getElementById('typingWrap')?.remove(); }
+
+// ── Send message ──
+async function send(text) {
+  if (!text.trim() || status === 'thinking') return;
+  speechSynthesis.cancel();
+  document.getElementById('liveText').textContent = '';
+  const userMsg = { role:'user', content:text };
+  messages.push(userMsg);
+  addBubble('user', text);
+  setStatus('thinking');
+  showTyping();
+
+  try {
+    const reply = await askClaude(messages);
+    messages.push({ role:'assistant', content:reply });
+    hideTyping();
+    addBubble('bot', formatMessage(reply), true);
+    setStatus('speaking');
+    speakText(reply, () => setStatus('idle'));
+  } catch {
+    hideTyping();
+    showError('Connection issue — please try again.');
+    setStatus('idle');
+  }
+}
+
+function sendFromInput() {
+  const inp = document.getElementById('textInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  inp.value = '';
+  inp.focus();
+  send(val);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') { e.preventDefault(); sendFromInput(); }
+}
+
+// ── Orb ──
+function handleOrb() {
+  if (status === 'thinking') return;
+  if (status === 'speaking') { speechSynthesis.cancel(); setStatus('idle'); return; }
+  if (status === 'listening') { recognition?.stop(); setStatus('idle'); return; }
+  startListening();
+}
+
+function startListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showError('Voice not available — please type below.'); return; }
+  speechSynthesis.cancel();
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  setStatus('listening');
+
+  recognition.onresult = (e) => {
+    const t = Array.from(e.results).map(r => r[0].transcript).join('');
+    document.getElementById('liveText').textContent = t;
+    if (e.results[e.results.length-1].isFinal) { recognition.stop(); send(t); }
+  };
+  recognition.onerror = (e) => {
+    setStatus('idle');
+    if (e.error === 'not-allowed') showError('Microphone access denied — please type instead.');
+    else showError("Couldn't hear that — try again or type below.");
+  };
+  recognition.onend = () => { if (status==='listening') setStatus('idle'); };
+  recognition.start();
+}
+
+// ── Begin ──
+async function beginSession() {
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('chat').style.display = 'flex';
+  setStatus('thinking');
+  showTyping();
+
+  try {
+    const reply = await askClaude([{ role:'user', content:'Hello' }]);
+    messages.push({ role:'assistant', content:reply });
+    hideTyping();
+    addBubble('bot', formatMessage(reply), true);
+    setStatus('speaking');
+    speakText(reply, () => setStatus('idle'));
+  } catch {
+    hideTyping();
+    showError('Could not connect — check your internet and try again.');
+    setStatus('idle');
+  }
+
+  setTimeout(() => document.getElementById('textInput').focus(), 400);
+}
+
+// Pre-load voices
+speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+</script>
+</body>
+</html>
