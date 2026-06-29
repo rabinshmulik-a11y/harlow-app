@@ -14,11 +14,8 @@
   }
   @keyframes pulse    { 0%,100%{transform:scale(1)}  50%{transform:scale(1.09)} }
   @keyframes breathe  { 0%,100%{transform:scale(1)}  50%{transform:scale(1.05)} }
-  @keyframes thinking { 0%{opacity:.3} 50%{opacity:1} 100%{opacity:.3} }
   @keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   @keyframes dotPulse { 0%,80%,100%{transform:scale(0);opacity:0} 40%{transform:scale(1);opacity:1} }
-
-  /* HOME */
   #home {
     flex:1; display:flex; flex-direction:column;
     align-items:center; justify-content:center;
@@ -33,8 +30,6 @@
     cursor:pointer; box-shadow:0 8px 28px rgba(200,160,48,.35);
     -webkit-tap-highlight-color:transparent;
   }
-
-  /* CHAT */
   #chat { flex:1; display:none; flex-direction:column; height:100%; }
   #header {
     padding:18px 20px 10px; display:flex;
@@ -50,8 +45,6 @@
     cursor:pointer; margin-right:10px; -webkit-tap-highlight-color:transparent;
   }
   #muteBtn.muted { background:rgba(255,100,100,.15); border-color:rgba(255,100,100,.3); color:#fca5a5; }
-
-  /* Messages */
   #messages { flex:1; overflow-y:auto; padding:14px 16px; scroll-behavior:smooth; }
   #messages::-webkit-scrollbar { width:0; }
   .bubble-wrap { display:flex; margin-bottom:10px; animation:fadeUp .25s ease; }
@@ -99,8 +92,6 @@
     font-size:13px; font-style:italic; margin:0 0 6px; padding:0 4px;
     min-height:18px;
   }
-
-  /* Controls */
   #controls {
     flex-shrink:0; padding:6px 16px 20px;
     display:flex; flex-direction:column; align-items:center; gap:6px;
@@ -152,7 +143,6 @@
 </head>
 <body>
 
-<!-- HOME -->
 <div id="home">
   <div style="font-size:52px">🏠</div>
   <h1>Harlow</h1>
@@ -160,7 +150,6 @@
   <button id="beginBtn" onclick="beginSession()">Begin</button>
 </div>
 
-<!-- CHAT -->
 <div id="chat">
   <div id="header">
     <div>
@@ -172,11 +161,9 @@
       <div id="statusDot"></div>
     </div>
   </div>
-
   <div id="messages">
     <div id="liveText"></div>
   </div>
-
   <div id="controls">
     <div id="errorMsg"></div>
     <button id="orb" onclick="handleOrb()">🎙</button>
@@ -195,9 +182,9 @@ You learn: number of people, dietary needs, preferred stores, budget, consumptio
 You anticipate: when things run out, what to order, when to order it, what occasions are coming up.
 You help: plan menus for guests, suggest shopping lists, track spending, remind about holidays and events.
 
-FORMATTING RULES — critical:
-- When listing items, always use a proper list (one item per line starting with a dash or number). Never run items together in a paragraph.
-- When mentioning a store where something can be bought, always include a clickable link placeholder in this exact format: [STORE:StoreName:SearchTerm] — for example [STORE:HEB:chicken breast] or [STORE:Walmart:grape juice]
+FORMATTING RULES:
+- When listing items, always use a proper list with each item on its own line starting with a dash. Never run items together in a paragraph.
+- When mentioning a store, always include a link placeholder in this exact format: [STORE:StoreName:SearchTerm] for example [STORE:HEB:chicken breast]
 - Keep replies conversational and warm — 2 to 4 sentences plus any lists or links
 - Never use asterisks, hashtags, or markdown bold. Plain text only.
 - Always end with one natural follow-up question.
@@ -208,9 +195,7 @@ let messages = [];
 let status = 'idle';
 let muted = false;
 let recognition = null;
-let currentUtt = null;
 
-// ── Voice ──
 function getBestVoice() {
   const voices = speechSynthesis.getVoices();
   const picks = [
@@ -219,7 +204,7 @@ function getBestVoice() {
     v => v.name === 'Moira',
     v => v.name.includes('Google US English'),
     v => v.name.includes('Google UK English Female'),
-    v => v.lang === 'en-US' && v.localService && !v.name.includes('Google'),
+    v => v.lang === 'en-US' && v.localService,
     v => v.lang.startsWith('en') && v.localService,
     v => v.lang.startsWith('en'),
   ];
@@ -230,37 +215,27 @@ function getBestVoice() {
 function speakText(text, onDone) {
   if (muted) { onDone && onDone(); return; }
   speechSynthesis.cancel();
-  const clean = text.replace(/\[STORE:[^\]]+\]/g,'').replace(/[*_#`•]/g,' ').replace(/\s+/g,' ').trim();
+  const clean = text.replace(/\[STORE:[^\]]+\]/g,'').replace(/[*_#`•\-]/g,' ').replace(/\s+/g,' ').trim();
   const utt = new SpeechSynthesisUtterance(clean);
   utt.rate = 0.92; utt.pitch = 1.0; utt.volume = 1.0;
   const doSpeak = () => {
-    const v = getBestVoice();
-    if (v) utt.voice = v;
+    const v = getBestVoice(); if (v) utt.voice = v;
     utt.onend = () => onDone && onDone();
     utt.onerror = () => onDone && onDone();
     speechSynthesis.speak(utt);
   };
   if (speechSynthesis.getVoices().length) doSpeak();
-  else { speechSynthesis.onvoiceschanged = doSpeak; }
-  currentUtt = utt;
+  else speechSynthesis.onvoiceschanged = doSpeak;
 }
 
 function toggleMute() {
   muted = !muted;
   const btn = document.getElementById('muteBtn');
-  if (muted) {
-    speechSynthesis.cancel();
-    btn.textContent = '🔇 Muted';
-    btn.classList.add('muted');
-  } else {
-    btn.textContent = '🔊 Sound on';
-    btn.classList.remove('muted');
-  }
+  if (muted) { speechSynthesis.cancel(); btn.textContent='🔇 Muted'; btn.classList.add('muted'); }
+  else { btn.textContent='🔊 Sound on'; btn.classList.remove('muted'); }
 }
 
-// ── Format reply into HTML ──
 function formatMessage(text) {
-  // Replace store links
   text = text.replace(/\[STORE:([^:]+):([^\]]+)\]/g, (_, store, term) => {
     const urls = {
       'HEB': `https://www.heb.com/search/?q=${encodeURIComponent(term)}`,
@@ -274,31 +249,20 @@ function formatMessage(text) {
     const url = urls[store] || `https://www.google.com/search?q=${encodeURIComponent(store+' '+term)}`;
     return `<a class="store-link" href="${url}" target="_blank">🛒 ${store}</a>`;
   });
-
-  // Detect lines that are list items (start with - or number or •)
   const lines = text.split('\n');
-  let html = '';
-  let inList = false;
-
+  let html = ''; let inList = false;
   for (let line of lines) {
-    line = line.trim();
-    if (!line) { if (inList) { html += '</ul>'; inList = false; } continue; }
-    const listMatch = line.match(/^[-•*]\s+(.+)/) || line.match(/^\d+[.)]\s+(.+)/);
-    if (listMatch) {
-      if (!inList) { html += '<ul>'; inList = true; }
-      html += `<li>${listMatch[1]}</li>`;
-    } else {
-      if (inList) { html += '</ul>'; inList = false; }
-      html += `<p>${line}</p>`;
-    }
+    line = line.trim(); if (!line) { if (inList) { html+='</ul>'; inList=false; } continue; }
+    const m = line.match(/^[-•*]\s+(.+)/) || line.match(/^\d+[.)]\s+(.+)/);
+    if (m) { if (!inList) { html+='<ul>'; inList=true; } html+=`<li>${m[1]}</li>`; }
+    else { if (inList) { html+='</ul>'; inList=false; } html+=`<p>${line}</p>`; }
   }
-  if (inList) html += '</ul>';
+  if (inList) html+='</ul>';
   return html;
 }
 
-// ── Claude API ──
 async function askClaude(msgs) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, system:SYSTEM, messages:msgs })
@@ -307,7 +271,6 @@ async function askClaude(msgs) {
   return data.content?.map(b => b.text||'').join('') || "I'm having trouble connecting right now.";
 }
 
-// ── Status helpers ──
 function setStatus(s) {
   status = s;
   const orb = document.getElementById('orb');
@@ -316,20 +279,19 @@ function setStatus(s) {
   const icons = { idle:'🎙', listening:'👂', thinking:'·', speaking:'♪' };
   const labels = { idle:'Tap to speak', listening:'Listening… tap to stop', thinking:'Thinking…', speaking:'Tap to stop' };
   const dots = { idle:'#c9a030', listening:'#f0d070', thinking:'#4a6fa5', speaking:'#2d8c5a' };
-  orb.className = s === 'idle' ? '' : s;
+  orb.className = s==='idle' ? '' : s;
   orb.textContent = icons[s];
   dot.style.background = dots[s];
   label.textContent = labels[s];
-  document.getElementById('sendBtn').disabled = (s === 'thinking');
+  document.getElementById('sendBtn').disabled = (s==='thinking');
 }
 
 function showError(msg) {
   const el = document.getElementById('errorMsg');
-  el.textContent = msg; el.style.display = 'block';
-  setTimeout(() => el.style.display='none', 4000);
+  el.textContent = msg; el.style.display='block';
+  setTimeout(()=>el.style.display='none', 5000);
 }
 
-// ── Add message bubble ──
 function addBubble(role, html, isHTML=false) {
   const msgs = document.getElementById('messages');
   const liveEl = document.getElementById('liveText');
@@ -337,8 +299,7 @@ function addBubble(role, html, isHTML=false) {
   wrap.className = `bubble-wrap ${role}`;
   const bub = document.createElement('div');
   bub.className = `bubble ${role}`;
-  if (isHTML) bub.innerHTML = html;
-  else bub.textContent = html;
+  if (isHTML) bub.innerHTML = html; else bub.textContent = html;
   wrap.appendChild(bub);
   msgs.insertBefore(wrap, liveEl);
   liveEl.scrollIntoView({ behavior:'smooth' });
@@ -348,31 +309,28 @@ function showTyping() {
   const msgs = document.getElementById('messages');
   const liveEl = document.getElementById('liveText');
   const wrap = document.createElement('div');
-  wrap.className = 'bubble-wrap bot'; wrap.id = 'typingWrap';
-  wrap.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  wrap.className='bubble-wrap bot'; wrap.id='typingWrap';
+  wrap.innerHTML='<div class="typing-indicator"><span></span><span></span><span></span></div>';
   msgs.insertBefore(wrap, liveEl);
   liveEl.scrollIntoView({ behavior:'smooth' });
 }
 function hideTyping() { document.getElementById('typingWrap')?.remove(); }
 
-// ── Send message ──
 async function send(text) {
-  if (!text.trim() || status === 'thinking') return;
+  if (!text.trim() || status==='thinking') return;
   speechSynthesis.cancel();
-  document.getElementById('liveText').textContent = '';
-  const userMsg = { role:'user', content:text };
-  messages.push(userMsg);
+  document.getElementById('liveText').textContent='';
+  messages.push({ role:'user', content:text });
   addBubble('user', text);
   setStatus('thinking');
   showTyping();
-
   try {
     const reply = await askClaude(messages);
     messages.push({ role:'assistant', content:reply });
     hideTyping();
     addBubble('bot', formatMessage(reply), true);
     setStatus('speaking');
-    speakText(reply, () => setStatus('idle'));
+    speakText(reply, ()=>setStatus('idle'));
   } catch {
     hideTyping();
     showError('Connection issue — please try again.');
@@ -384,20 +342,17 @@ function sendFromInput() {
   const inp = document.getElementById('textInput');
   const val = inp.value.trim();
   if (!val) return;
-  inp.value = '';
+  inp.value='';
   inp.focus();
   send(val);
 }
 
-function handleKey(e) {
-  if (e.key === 'Enter') { e.preventDefault(); sendFromInput(); }
-}
+function handleKey(e) { if (e.key==='Enter') { e.preventDefault(); sendFromInput(); } }
 
-// ── Orb ──
 function handleOrb() {
-  if (status === 'thinking') return;
-  if (status === 'speaking') { speechSynthesis.cancel(); setStatus('idle'); return; }
-  if (status === 'listening') { recognition?.stop(); setStatus('idle'); return; }
+  if (status==='thinking') return;
+  if (status==='speaking') { speechSynthesis.cancel(); setStatus('idle'); return; }
+  if (status==='listening') { recognition?.stop(); setStatus('idle'); return; }
   startListening();
 }
 
@@ -406,51 +361,44 @@ function startListening() {
   if (!SR) { showError('Voice not available — please type below.'); return; }
   speechSynthesis.cancel();
   recognition = new SR();
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.lang = 'en-US';
+  recognition.continuous=false; recognition.interimResults=true; recognition.lang='en-US';
   setStatus('listening');
-
   recognition.onresult = (e) => {
-    const t = Array.from(e.results).map(r => r[0].transcript).join('');
-    document.getElementById('liveText').textContent = t;
+    const t = Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('liveText').textContent=t;
     if (e.results[e.results.length-1].isFinal) { recognition.stop(); send(t); }
   };
   recognition.onerror = (e) => {
     setStatus('idle');
-    if (e.error === 'not-allowed') showError('Microphone access denied — please type instead.');
+    if (e.error==='not-allowed') showError('Microphone access denied — please type instead.');
     else showError("Couldn't hear that — try again or type below.");
   };
   recognition.onend = () => { if (status==='listening') setStatus('idle'); };
   recognition.start();
 }
 
-// ── Begin ──
 async function beginSession() {
-  document.getElementById('home').style.display = 'none';
-  document.getElementById('chat').style.display = 'flex';
+  document.getElementById('home').style.display='none';
+  document.getElementById('chat').style.display='flex';
   setStatus('thinking');
   showTyping();
-
   try {
     const reply = await askClaude([{ role:'user', content:'Hello' }]);
     messages.push({ role:'assistant', content:reply });
     hideTyping();
     addBubble('bot', formatMessage(reply), true);
     setStatus('speaking');
-    speakText(reply, () => setStatus('idle'));
+    speakText(reply, ()=>setStatus('idle'));
   } catch {
     hideTyping();
     showError('Could not connect — check your internet and try again.');
     setStatus('idle');
   }
-
-  setTimeout(() => document.getElementById('textInput').focus(), 400);
+  setTimeout(()=>document.getElementById('textInput').focus(), 400);
 }
 
-// Pre-load voices
 speechSynthesis.getVoices();
-speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged = ()=>speechSynthesis.getVoices();
 </script>
 </body>
 </html>
