@@ -5,167 +5,227 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Harlow — Household Butler</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
   body {
-    height: 100dvh; display: flex; flex-direction: column;
-    background: linear-gradient(160deg,#0b0f1a 0%,#131c30 60%,#0b0f1a 100%);
-    font-family: -apple-system, 'Inter', system-ui, sans-serif;
-    color: #fff; overflow: hidden;
+    height:100dvh; display:flex; flex-direction:column;
+    background:linear-gradient(160deg,#0b0f1a 0%,#131c30 60%,#0b0f1a 100%);
+    font-family:-apple-system,'Inter',system-ui,sans-serif;
+    color:#fff; overflow:hidden;
   }
-  @keyframes pulse    { 0%,100%{transform:scale(1)}  50%{transform:scale(1.09)} }
-  @keyframes breathe  { 0%,100%{transform:scale(1)}  50%{transform:scale(1.05)} }
-  @keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes dotPulse { 0%,80%,100%{transform:scale(0);opacity:0} 40%{transform:scale(1);opacity:1} }
-  #home {
+  @keyframes pulse   { 0%,100%{transform:scale(1)} 50%{transform:scale(1.09)} }
+  @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+  @keyframes fadeUp  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes dotP    { 0%,80%,100%{transform:scale(0);opacity:0} 40%{transform:scale(1);opacity:1} }
+
+  /* ── ONBOARDING ── */
+  #onboarding {
     flex:1; display:flex; flex-direction:column;
     align-items:center; justify-content:center;
-    padding:32px; animation:fadeUp .5s ease;
+    padding:28px; animation:fadeUp .5s ease;
   }
-  #home h1 { font-size:30px; font-weight:800; letter-spacing:-.8px; margin:16px 0 8px; }
-  #home p  { font-size:15px; color:rgba(255,255,255,.4); text-align:center; line-height:1.6; max-width:300px; margin-bottom:48px; }
-  #beginBtn {
-    background:linear-gradient(135deg,#c9a030,#7a5410);
-    color:#fff; border:none; border-radius:50px;
-    padding:15px 44px; font-size:17px; font-weight:700;
-    cursor:pointer; box-shadow:0 8px 28px rgba(200,160,48,.35);
+  .ob-card {
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+    border-radius:20px; padding:28px 24px; width:100%; max-width:420px;
+  }
+  .ob-card h2 { font-size:22px; font-weight:800; margin-bottom:6px; letter-spacing:-.5px; }
+  .ob-card p  { font-size:14px; color:rgba(255,255,255,.45); line-height:1.55; margin-bottom:20px; }
+  .ob-label   { font-size:12px; font-weight:600; color:rgba(255,255,255,.5); margin-bottom:6px; display:block; }
+  .ob-input {
+    width:100%; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+    border-radius:10px; padding:11px 13px; color:#fff; font-size:15px;
+    font-family:inherit; margin-bottom:14px;
+  }
+  .ob-input:focus { outline:none; border-color:rgba(201,160,48,.5); }
+  .ob-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .ob-chip {
+    background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.12);
+    border-radius:20px; padding:7px 14px; font-size:13px; cursor:pointer;
+    transition:all .2s; -webkit-tap-highlight-color:transparent; color:#fff;
+  }
+  .ob-chip.selected { background:rgba(201,160,48,.2); border-color:#c9a030; color:#e8c060; }
+  .ob-next {
+    width:100%; background:linear-gradient(135deg,#c9a030,#7a5410);
+    color:#fff; border:none; border-radius:12px; padding:14px;
+    font-size:16px; font-weight:700; cursor:pointer; margin-top:6px;
     -webkit-tap-highlight-color:transparent;
   }
+  .ob-next:disabled { background:rgba(255,255,255,.1); color:rgba(255,255,255,.3); cursor:default; }
+  .ob-progress { display:flex; gap:6px; margin-bottom:20px; }
+  .ob-dot { height:4px; border-radius:2px; background:rgba(255,255,255,.15); flex:1; transition:background .3s; }
+  .ob-dot.done { background:#c9a030; }
+
+  /* ── CHAT ── */
   #chat { flex:1; display:none; flex-direction:column; height:100%; }
   #header {
-    padding:18px 20px 10px; display:flex;
-    align-items:center; justify-content:space-between; flex-shrink:0;
+    padding:14px 18px 10px; display:flex; align-items:center;
+    justify-content:space-between; flex-shrink:0;
     border-bottom:1px solid rgba(255,255,255,.05);
   }
-  #header .title { font-size:20px; font-weight:800; letter-spacing:-.5px; }
-  #header .sub   { font-size:11px; color:rgba(255,255,255,.3); margin-top:1px; }
-  #statusDot { width:8px; height:8px; border-radius:50%; background:#c9a030; transition:background .3s; }
+  .h-title { font-size:19px; font-weight:800; letter-spacing:-.5px; }
+  .h-sub   { font-size:11px; color:rgba(255,255,255,.3); margin-top:1px; }
+  #statusDot { width:8px; height:8px; border-radius:50%; background:#c9a030; transition:background .3s; flex-shrink:0; }
   #muteBtn {
     background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
-    border-radius:20px; padding:5px 12px; font-size:12px; color:rgba(255,255,255,.6);
-    cursor:pointer; margin-right:10px; -webkit-tap-highlight-color:transparent;
+    border-radius:20px; padding:5px 11px; font-size:12px; color:rgba(255,255,255,.6);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
-  #muteBtn.muted { background:rgba(255,100,100,.15); border-color:rgba(255,100,100,.3); color:#fca5a5; }
-  #messages { flex:1; overflow-y:auto; padding:14px 16px; scroll-behavior:smooth; }
+  #muteBtn.muted { background:rgba(255,80,80,.15); border-color:rgba(255,80,80,.3); color:#fca5a5; }
+  #messages { flex:1; overflow-y:auto; padding:12px 14px; scroll-behavior:smooth; }
   #messages::-webkit-scrollbar { width:0; }
-  .bubble-wrap { display:flex; margin-bottom:10px; animation:fadeUp .25s ease; }
-  .bubble-wrap.user  { justify-content:flex-end; }
-  .bubble-wrap.bot   { justify-content:flex-start; }
+  .bwrap { display:flex; margin-bottom:10px; animation:fadeUp .22s ease; }
+  .bwrap.user { justify-content:flex-end; }
   .bubble {
-    max-width:82%; padding:11px 15px; font-size:14px; line-height:1.58;
-    border-radius:18px;
+    max-width:83%; padding:11px 14px; font-size:14px; line-height:1.58; border-radius:18px;
   }
-  .bubble.user {
-    background:linear-gradient(135deg,#c9a030,#7a5410);
-    border-radius:18px 18px 4px 18px;
-  }
-  .bubble.bot {
-    background:rgba(255,255,255,.07);
-    border:1px solid rgba(255,255,255,.09);
-    border-radius:18px 18px 18px 4px;
-  }
-  .bubble ul { margin:8px 0 4px 18px; }
-  .bubble ul li { margin-bottom:4px; }
-  .bubble p  { margin-bottom:6px; }
+  .bubble.user { background:linear-gradient(135deg,#c9a030,#7a5410); border-radius:18px 18px 4px 18px; }
+  .bubble.bot  { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.09); border-radius:18px 18px 18px 4px; }
+  .bubble ul { margin:7px 0 3px 16px; }
+  .bubble li { margin-bottom:4px; }
+  .bubble p  { margin-bottom:5px; }
   .bubble p:last-child { margin-bottom:0; }
-  .store-link {
-    display:inline-block; margin:4px 4px 0 0;
-    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
-    border-radius:20px; padding:5px 12px; font-size:13px;
-    color:#d4b060; text-decoration:none; cursor:pointer;
-    transition:background .2s;
+  .slink {
+    display:inline-flex; align-items:center; gap:5px;
+    margin:4px 4px 0 0; background:rgba(255,255,255,.09);
+    border:1px solid rgba(255,255,255,.16); border-radius:20px;
+    padding:5px 12px; font-size:13px; color:#d4b060;
+    text-decoration:none; cursor:pointer; transition:background .2s;
   }
-  .store-link:hover { background:rgba(255,255,255,.18); }
-  .typing-indicator {
-    display:flex; align-items:center; gap:5px;
-    padding:12px 16px; background:rgba(255,255,255,.07);
-    border:1px solid rgba(255,255,255,.09);
-    border-radius:18px 18px 18px 4px; width:fit-content;
-  }
-  .typing-indicator span {
-    width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.4);
-    animation:dotPulse 1.4s ease-in-out infinite;
-  }
-  .typing-indicator span:nth-child(2) { animation-delay:.2s; }
-  .typing-indicator span:nth-child(3) { animation-delay:.4s; }
-  #liveText {
-    text-align:right; color:rgba(212,168,48,.55);
-    font-size:13px; font-style:italic; margin:0 0 6px; padding:0 4px;
-    min-height:18px;
-  }
-  #controls {
-    flex-shrink:0; padding:6px 16px 20px;
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-  }
+  .slink:hover { background:rgba(255,255,255,.16); }
+  .typing { display:flex; align-items:center; gap:5px; padding:12px 15px;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.09);
+    border-radius:18px 18px 18px 4px; width:fit-content; }
+  .typing span { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.4); animation:dotP 1.4s ease-in-out infinite; }
+  .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
+  #liveText { text-align:right; color:rgba(212,168,48,.5); font-size:13px; font-style:italic; margin:0 0 5px; min-height:17px; }
+  #controls { flex-shrink:0; padding:4px 14px 18px; display:flex; flex-direction:column; align-items:center; gap:5px; }
   #orb {
-    width:110px; height:110px; border-radius:50%; border:none;
+    width:106px; height:106px; border-radius:50%; border:none;
     background:radial-gradient(circle at 38% 32%,#d4a843,#7a5410);
-    box-shadow:0 0 40px rgba(212,168,67,.3), 0 6px 24px rgba(0,0,0,.4);
-    font-size:30px; cursor:pointer; transition:box-shadow .3s, background .3s;
-    -webkit-tap-highlight-color:transparent; display:flex;
-    align-items:center; justify-content:center;
+    box-shadow:0 0 40px rgba(212,168,67,.28),0 6px 22px rgba(0,0,0,.4);
+    font-size:28px; cursor:pointer; transition:box-shadow .3s,background .3s;
+    -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center;
   }
-  #orb.listening {
-    background:radial-gradient(circle at 38% 32%,#f0d070,#c9a030);
-    box-shadow:0 0 70px rgba(240,208,80,.65),0 6px 24px rgba(0,0,0,.4);
-    animation:pulse 1.1s ease-in-out infinite;
-  }
-  #orb.thinking {
-    background:radial-gradient(circle at 38% 32%,#7090d0,#2a4a90);
-    box-shadow:0 0 60px rgba(80,120,220,.5),0 6px 24px rgba(0,0,0,.4);
-    animation:breathe 1.5s ease-in-out infinite;
-  }
-  #orb.speaking {
-    background:radial-gradient(circle at 38% 32%,#60d090,#1a7a48);
-    box-shadow:0 0 60px rgba(60,200,120,.5),0 6px 24px rgba(0,0,0,.4);
-    animation:breathe .9s ease-in-out infinite;
-  }
-  #orbLabel { font-size:12px; color:rgba(255,255,255,.28); letter-spacing:.3px; min-height:16px; }
-  #inputRow { display:flex; gap:8px; width:100%; max-width:480px; }
+  #orb.listening { background:radial-gradient(circle at 38% 32%,#f0d070,#c9a030); box-shadow:0 0 70px rgba(240,208,80,.6),0 6px 22px rgba(0,0,0,.4); animation:pulse 1.1s ease-in-out infinite; }
+  #orb.thinking  { background:radial-gradient(circle at 38% 32%,#7090d0,#2a4a90); box-shadow:0 0 60px rgba(80,120,220,.48),0 6px 22px rgba(0,0,0,.4); animation:breathe 1.5s ease-in-out infinite; }
+  #orb.speaking  { background:radial-gradient(circle at 38% 32%,#60d090,#1a7a48); box-shadow:0 0 60px rgba(60,200,120,.48),0 6px 22px rgba(0,0,0,.4); animation:breathe .9s ease-in-out infinite; }
+  #orbLabel { font-size:12px; color:rgba(255,255,255,.26); letter-spacing:.3px; min-height:15px; }
+  #inputRow { display:flex; gap:7px; width:100%; max-width:480px; }
   #textInput {
-    flex:1; background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.1); border-radius:12px;
-    padding:11px 14px; color:#fff; font-size:15px; font-family:inherit;
+    flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+    border-radius:12px; padding:11px 13px; color:#fff; font-size:15px; font-family:inherit;
   }
-  #textInput:focus { outline:none; border-color:rgba(201,160,48,.5); }
+  #textInput:focus { outline:none; border-color:rgba(201,160,48,.45); }
   #sendBtn {
-    background:linear-gradient(135deg,#c9a030,#7a5410);
-    border:none; border-radius:12px; padding:11px 18px;
-    color:#fff; font-size:20px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
+    background:linear-gradient(135deg,#c9a030,#7a5410); border:none;
+    border-radius:12px; padding:11px 17px; color:#fff; font-size:20px;
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
   #sendBtn:disabled { background:rgba(255,255,255,.06); color:rgba(255,255,255,.2); cursor:default; }
-  #errorMsg {
-    display:none; margin:0 0 6px; padding:9px 13px;
-    background:rgba(220,50,50,.15); border:1px solid rgba(220,50,50,.3);
+  #errBox {
+    display:none; margin:0 0 5px; padding:8px 12px;
+    background:rgba(220,50,50,.14); border:1px solid rgba(220,50,50,.28);
     border-radius:10px; font-size:13px; color:#fca5a5; text-align:center; width:100%; max-width:480px;
   }
 </style>
 </head>
 <body>
 
-<div id="home">
-  <div style="font-size:52px">🏠</div>
-  <h1>Harlow</h1>
-  <p>Your household runs smoother when someone's paying attention.</p>
-  <button id="beginBtn" onclick="beginSession()">Begin</button>
+<!-- ══ ONBOARDING ══ -->
+<div id="onboarding">
+  <div style="text-align:center;margin-bottom:20px">
+    <div style="font-size:48px">🏠</div>
+    <div style="font-size:26px;font-weight:800;letter-spacing:-.6px;margin-top:10px">Harlow</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.35);margin-top:4px">Your household butler</div>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="ob-card" id="step1">
+    <div class="ob-progress">
+      <div class="ob-dot done" id="p1"></div>
+      <div class="ob-dot" id="p2"></div>
+      <div class="ob-dot" id="p3"></div>
+      <div class="ob-dot" id="p4"></div>
+    </div>
+    <h2>👋 Let's set up your home</h2>
+    <p>Harlow will learn your household and take care of the rest.</p>
+    <label class="ob-label">How many people live in your home?</label>
+    <input class="ob-input" id="q1" type="number" min="1" max="20" placeholder="e.g. 4"/>
+    <label class="ob-label">Any dietary needs or restrictions?</label>
+    <input class="ob-input" id="q2" placeholder="e.g. kosher, nut allergy, vegetarian, none"/>
+    <button class="ob-next" onclick="goStep(2)">Next →</button>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="ob-card" id="step2" style="display:none">
+    <div class="ob-progress">
+      <div class="ob-dot done"></div><div class="ob-dot done" id="p2b"></div>
+      <div class="ob-dot" id="p3b"></div><div class="ob-dot" id="p4b"></div>
+    </div>
+    <h2>🛒 Your memberships</h2>
+    <p>Tap all that apply — Harlow will only suggest stores you can actually use.</p>
+    <div class="ob-row" id="memberships">
+      <div class="ob-chip" data-val="Amazon Prime" onclick="toggleChip(this)">📦 Amazon Prime</div>
+      <div class="ob-chip" data-val="Costco" onclick="toggleChip(this)">🏪 Costco</div>
+      <div class="ob-chip" data-val="Sam's Club" onclick="toggleChip(this)">🏬 Sam's Club</div>
+      <div class="ob-chip" data-val="Walmart+" onclick="toggleChip(this)">🛒 Walmart+</div>
+      <div class="ob-chip" data-val="None" onclick="toggleChip(this)">✖ None</div>
+    </div>
+    <button class="ob-next" onclick="goStep(3)">Next →</button>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="ob-card" id="step3" style="display:none">
+    <div class="ob-progress">
+      <div class="ob-dot done"></div><div class="ob-dot done"></div>
+      <div class="ob-dot done"></div><div class="ob-dot" id="p4c"></div>
+    </div>
+    <h2>🚚 Delivery preferences</h2>
+    <p>How do you prefer to get your groceries?</p>
+    <div class="ob-row" id="deliveryPref">
+      <div class="ob-chip" data-val="Always delivery" onclick="selectOne(this,'deliveryPref')">🚚 Always delivery</div>
+      <div class="ob-chip" data-val="Ask me each time" onclick="selectOne(this,'deliveryPref')">🤔 Ask me each time</div>
+      <div class="ob-chip" data-val="Mostly pickup" onclick="selectOne(this,'deliveryPref')">🚗 Mostly pickup</div>
+      <div class="ob-chip" data-val="I'll go to the store" onclick="selectOne(this,'deliveryPref')">🏃 I'll go myself</div>
+    </div>
+    <label class="ob-label" style="margin-top:4px">What are your usual stores? (optional)</label>
+    <input class="ob-input" id="q3" placeholder="e.g. HEB, Walmart, Costco"/>
+    <button class="ob-next" onclick="goStep(4)">Next →</button>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="ob-card" id="step4" style="display:none">
+    <div class="ob-progress">
+      <div class="ob-dot done"></div><div class="ob-dot done"></div>
+      <div class="ob-dot done"></div><div class="ob-dot done"></div>
+    </div>
+    <h2>📅 Occasions & holidays</h2>
+    <p>Harlow will proactively plan around these.</p>
+    <div class="ob-row" id="occasions">
+      <div class="ob-chip" data-val="Jewish holidays & Shabbat" onclick="toggleChip(this)">✡️ Jewish / Shabbat</div>
+      <div class="ob-chip" data-val="Christian holidays" onclick="toggleChip(this)">✝️ Christian</div>
+      <div class="ob-chip" data-val="Muslim holidays" onclick="toggleChip(this)">☪️ Muslim</div>
+      <div class="ob-chip" data-val="US national holidays" onclick="toggleChip(this)">🇺🇸 US Holidays</div>
+      <div class="ob-chip" data-val="Birthdays & anniversaries" onclick="toggleChip(this)">🎂 Birthdays</div>
+    </div>
+    <button class="ob-next" onclick="finishOnboarding()">Meet Harlow →</button>
+  </div>
 </div>
 
+<!-- ══ CHAT ══ -->
 <div id="chat">
   <div id="header">
     <div>
-      <div class="title">Harlow</div>
-      <div class="sub">Household butler</div>
+      <div class="h-title">Harlow</div>
+      <div class="h-sub" id="h-sub">Household butler</div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;gap:9px">
       <button id="muteBtn" onclick="toggleMute()">🔊 Sound on</button>
       <div id="statusDot"></div>
     </div>
   </div>
-  <div id="messages">
-    <div id="liveText"></div>
-  </div>
+  <div id="messages"><div id="liveText"></div></div>
   <div id="controls">
-    <div id="errorMsg"></div>
+    <div id="errBox"></div>
     <button id="orb" onclick="handleOrb()">🎙</button>
     <div id="orbLabel">Tap to speak</div>
     <div id="inputRow">
@@ -176,229 +236,302 @@
 </div>
 
 <script>
-const SYSTEM = `You are Harlow, a warm and intelligent household butler AI. Your job is to learn this household deeply and help manage it proactively.
+// ══ STORE DATA ══
+const STORES = {
+  'HEB':          { url:'https://www.heb.com/search/?q=', emoji:'🛒', membership:null },
+  'Walmart':      { url:'https://www.walmart.com/search?q=', emoji:'🛒', membership:null },
+  'Amazon Fresh': { url:'https://www.amazon.com/s?k=', emoji:'📦', membership:'Amazon Prime' },
+  'Whole Foods':  { url:'https://www.amazon.com/s?k=', emoji:'🌿', membership:'Amazon Prime' },
+  'Kroger':       { url:'https://www.kroger.com/search?query=', emoji:'🛒', membership:null },
+  'Costco':       { url:'https://www.costco.com/CatalogSearch?keyword=', emoji:'🏪', membership:'Costco' },
+  'Sams Club':    { url:'https://www.samsclub.com/search?searchTerm=', emoji:'🏬', membership:"Sam's Club" },
+  'Target':       { url:'https://www.target.com/s?searchTerm=', emoji:'🎯', membership:null },
+  'Instacart':    { url:'https://www.instacart.com/store/s?k=', emoji:'🥦', membership:null },
+  'Sprouts':      { url:'https://shop.sprouts.com/search?search=', emoji:'🌱', membership:null },
+  'Aldi':         { url:'https://www.aldi.us/en/search/?text=', emoji:'🛍', membership:null },
+  'Walgreens':    { url:'https://www.walgreens.com/search/results.jsp?Ntt=', emoji:'💊', membership:null },
+};
 
-You learn: number of people, dietary needs, preferred stores, budget, consumption patterns, upcoming events and holidays (Jewish, Christian, national, personal).
-You anticipate: when things run out, what to order, when to order it, what occasions are coming up.
-You help: plan menus for guests, suggest shopping lists, track spending, remind about holidays and events.
-
-FORMATTING RULES:
-- When listing items, always use a proper list with each item on its own line starting with a dash. Never run items together in a paragraph.
-- When mentioning a store, always include a link placeholder in this exact format: [STORE:StoreName:SearchTerm] for example [STORE:HEB:chicken breast]
-- Keep replies conversational and warm — 2 to 4 sentences plus any lists or links
-- Never use asterisks, hashtags, or markdown bold. Plain text only.
-- Always end with one natural follow-up question.
-
-On first message, introduce yourself briefly and ask one warm opening question.`;
-
+// ══ USER PROFILE ══
+let profile = { people:'', dietary:'', memberships:[], delivery:'', stores:'', occasions:[] };
 let messages = [];
 let status = 'idle';
 let muted = false;
 let recognition = null;
 
+// ══ ONBOARDING ══
+function toggleChip(el) {
+  el.classList.toggle('selected');
+}
+function selectOne(el, groupId) {
+  document.querySelectorAll(`#${groupId} .ob-chip`).forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function getSelected(groupId) {
+  return Array.from(document.querySelectorAll(`#${groupId} .ob-chip.selected`)).map(c => c.dataset.val);
+}
+
+function goStep(n) {
+  if (n === 2) {
+    profile.people = document.getElementById('q1').value || '?';
+    profile.dietary = document.getElementById('q2').value || 'none';
+  }
+  if (n === 3) {
+    profile.memberships = getSelected('memberships');
+  }
+  if (n === 4) {
+    profile.delivery = getSelected('deliveryPref')[0] || 'Ask me each time';
+    profile.stores = document.getElementById('q3').value || '';
+  }
+  for (let i=1;i<=4;i++) {
+    const el = document.getElementById('step'+i);
+    if(el) el.style.display = (i===n) ? 'block' : 'none';
+  }
+}
+
+function finishOnboarding() {
+  profile.occasions = getSelected('occasions');
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('chat').style.display = 'flex';
+  beginChat();
+}
+
+// ══ SYSTEM PROMPT ══
+function buildSystem() {
+  const availableStores = Object.entries(STORES)
+    .filter(([name, s]) => !s.membership || profile.memberships.includes(s.membership))
+    .map(([name]) => name).join(', ');
+
+  return `You are Harlow, a warm, intelligent household butler AI. You speak naturally and conversationally — like a helpful, knowledgeable friend, not a robot. Never sound stiff or formal.
+
+HOUSEHOLD PROFILE:
+- People in home: ${profile.people}
+- Dietary needs: ${profile.dietary || 'none specified'}
+- Memberships: ${profile.memberships.join(', ') || 'none'}
+- Delivery preference: ${profile.delivery || 'ask each time'}
+- Preferred stores: ${profile.stores || 'no preference'}
+- Occasions to track: ${profile.occasions.join(', ') || 'general'}
+- Available stores for this user: ${availableStores}
+
+YOUR PERSONALITY:
+- Warm, proactive, and genuinely helpful
+- Speak in natural short sentences — like you're talking, not writing
+- Anticipate needs before they're asked
+- Remember everything said in this conversation
+- Be specific — not "some stores" but "HEB and Walmart"
+- Occasionally notice things the user didn't ask about
+
+YOUR JOBS:
+- Track what the household needs and when things might run out
+- Plan for upcoming holidays and occasions relevant to this user
+- Suggest shopping lists with quantities based on household size
+- Compare stores and recommend best options based on their memberships
+- Help plan menus for guests or occasions
+- If delivery preference is "Ask me each time", always ask delivery or pickup before finalizing an order suggestion
+
+FORMATTING — critical:
+- Lists: always one item per line starting with a dash. Never run items into a paragraph.
+- Store links: when recommending a store use exactly this format: [STORE:StoreName:SearchTerm] — only use stores from the available stores list above
+- Keep replies to 2-4 sentences + any lists. Concise but warm.
+- No asterisks, hashtags, or markdown. Plain conversational text only.
+- End each reply with one natural follow-up question.
+
+Today's date: ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+}
+
+// ══ VOICE ══
 function getBestVoice() {
-  const voices = speechSynthesis.getVoices();
-  const picks = [
-    v => v.name === 'Samantha',
-    v => v.name === 'Karen',
-    v => v.name === 'Moira',
-    v => v.name.includes('Google US English'),
-    v => v.name.includes('Google UK English Female'),
-    v => v.lang === 'en-US' && v.localService,
-    v => v.lang.startsWith('en') && v.localService,
-    v => v.lang.startsWith('en'),
+  const v = speechSynthesis.getVoices();
+  const order = [
+    x => x.name === 'Samantha',
+    x => x.name === 'Karen',
+    x => x.name === 'Moira',
+    x => x.name.includes('Google US English'),
+    x => x.name.includes('Google UK English Female'),
+    x => x.lang==='en-US' && x.localService,
+    x => x.lang.startsWith('en') && x.localService,
+    x => x.lang.startsWith('en'),
   ];
-  for (const fn of picks) { const v = voices.find(fn); if (v) return v; }
+  for (const fn of order) { const found = v.find(fn); if (found) return found; }
   return null;
 }
 
 function speakText(text, onDone) {
-  if (muted) { onDone && onDone(); return; }
+  if (muted) { onDone&&onDone(); return; }
   speechSynthesis.cancel();
   const clean = text.replace(/\[STORE:[^\]]+\]/g,'').replace(/[*_#`•\-]/g,' ').replace(/\s+/g,' ').trim();
   const utt = new SpeechSynthesisUtterance(clean);
-  utt.rate = 0.92; utt.pitch = 1.0; utt.volume = 1.0;
-  const doSpeak = () => {
-    const v = getBestVoice(); if (v) utt.voice = v;
-    utt.onend = () => onDone && onDone();
-    utt.onerror = () => onDone && onDone();
+  utt.rate=0.91; utt.pitch=1.0; utt.volume=1.0;
+  const go = () => {
+    const v = getBestVoice(); if(v) utt.voice=v;
+    utt.onend=()=>onDone&&onDone();
+    utt.onerror=()=>onDone&&onDone();
     speechSynthesis.speak(utt);
   };
-  if (speechSynthesis.getVoices().length) doSpeak();
-  else speechSynthesis.onvoiceschanged = doSpeak;
+  speechSynthesis.getVoices().length ? go() : (speechSynthesis.onvoiceschanged=go);
 }
 
 function toggleMute() {
-  muted = !muted;
-  const btn = document.getElementById('muteBtn');
-  if (muted) { speechSynthesis.cancel(); btn.textContent='🔇 Muted'; btn.classList.add('muted'); }
-  else { btn.textContent='🔊 Sound on'; btn.classList.remove('muted'); }
+  muted=!muted;
+  const b=document.getElementById('muteBtn');
+  if(muted){speechSynthesis.cancel();b.textContent='🔇 Muted';b.classList.add('muted');}
+  else{b.textContent='🔊 Sound on';b.classList.remove('muted');}
 }
 
-function formatMessage(text) {
-  text = text.replace(/\[STORE:([^:]+):([^\]]+)\]/g, (_, store, term) => {
-    const urls = {
-      'HEB': `https://www.heb.com/search/?q=${encodeURIComponent(term)}`,
-      'Walmart': `https://www.walmart.com/search?q=${encodeURIComponent(term)}`,
-      'Kroger': `https://www.kroger.com/search?query=${encodeURIComponent(term)}`,
-      'Costco': `https://www.costco.com/CatalogSearch?keyword=${encodeURIComponent(term)}`,
-      'Amazon': `https://www.amazon.com/s?k=${encodeURIComponent(term)}`,
-      'Target': `https://www.target.com/s?searchTerm=${encodeURIComponent(term)}`,
-      'Instacart': `https://www.instacart.com/store/s?k=${encodeURIComponent(term)}`,
-    };
-    const url = urls[store] || `https://www.google.com/search?q=${encodeURIComponent(store+' '+term)}`;
-    return `<a class="store-link" href="${url}" target="_blank">🛒 ${store}</a>`;
+// ══ FORMAT MESSAGE ══
+function fmt(text) {
+  text = text.replace(/\[STORE:([^:]+):([^\]]+)\]/g,(_,store,term)=>{
+    const s = STORES[store] || STORES['Instacart'];
+    const url = (s?.url||'https://www.google.com/search?q=') + encodeURIComponent(term);
+    const emoji = s?.emoji || '🛒';
+    return `<a class="slink" href="${url}" target="_blank">${emoji} ${store}</a>`;
   });
   const lines = text.split('\n');
-  let html = ''; let inList = false;
-  for (let line of lines) {
-    line = line.trim(); if (!line) { if (inList) { html+='</ul>'; inList=false; } continue; }
-    const m = line.match(/^[-•*]\s+(.+)/) || line.match(/^\d+[.)]\s+(.+)/);
-    if (m) { if (!inList) { html+='<ul>'; inList=true; } html+=`<li>${m[1]}</li>`; }
-    else { if (inList) { html+='</ul>'; inList=false; } html+=`<p>${line}</p>`; }
+  let html=''; let inList=false;
+  for(let line of lines){
+    line=line.trim(); if(!line){if(inList){html+='</ul>';inList=false;}continue;}
+    const m=line.match(/^[-•*]\s+(.+)/)||line.match(/^\d+[.)]\s+(.+)/);
+    if(m){if(!inList){html+='<ul>';inList=true;}html+=`<li>${m[1]}</li>`;}
+    else{if(inList){html+='</ul>';inList=false;}html+=`<p>${line}</p>`;}
   }
-  if (inList) html+='</ul>';
+  if(inList)html+='</ul>';
   return html;
 }
 
+// ══ API ══
 async function askClaude(msgs) {
-  const res = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, system:SYSTEM, messages:msgs })
+  const res = await fetch('/api/chat',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:buildSystem(),messages:msgs})
   });
   const data = await res.json();
-  return data.content?.map(b => b.text||'').join('') || "I'm having trouble connecting right now.";
+  return data.content?.map(b=>b.text||'').join('')||"I'm having trouble connecting right now.";
 }
 
-function setStatus(s) {
-  status = s;
-  const orb = document.getElementById('orb');
-  const dot = document.getElementById('statusDot');
-  const label = document.getElementById('orbLabel');
-  const icons = { idle:'🎙', listening:'👂', thinking:'·', speaking:'♪' };
-  const labels = { idle:'Tap to speak', listening:'Listening… tap to stop', thinking:'Thinking…', speaking:'Tap to stop' };
-  const dots = { idle:'#c9a030', listening:'#f0d070', thinking:'#4a6fa5', speaking:'#2d8c5a' };
-  orb.className = s==='idle' ? '' : s;
-  orb.textContent = icons[s];
-  dot.style.background = dots[s];
-  label.textContent = labels[s];
-  document.getElementById('sendBtn').disabled = (s==='thinking');
+// ══ STATUS ══
+function setStatus(s){
+  status=s;
+  const orb=document.getElementById('orb');
+  const dot=document.getElementById('statusDot');
+  const lbl=document.getElementById('orbLabel');
+  const icons={idle:'🎙',listening:'👂',thinking:'·',speaking:'♪'};
+  const labels={idle:'Tap to speak',listening:'Listening… tap to stop',thinking:'Thinking…',speaking:'Tap to stop'};
+  const dots={idle:'#c9a030',listening:'#f0d070',thinking:'#4a6fa5',speaking:'#2d8c5a'};
+  orb.className=s==='idle'?'':s;
+  orb.textContent=icons[s];
+  dot.style.background=dots[s];
+  lbl.textContent=labels[s];
+  document.getElementById('sendBtn').disabled=(s==='thinking');
 }
 
-function showError(msg) {
-  const el = document.getElementById('errorMsg');
-  el.textContent = msg; el.style.display='block';
-  setTimeout(()=>el.style.display='none', 5000);
+function showErr(msg){
+  const e=document.getElementById('errBox');
+  e.textContent=msg;e.style.display='block';
+  setTimeout(()=>e.style.display='none',5000);
 }
 
-function addBubble(role, html, isHTML=false) {
-  const msgs = document.getElementById('messages');
-  const liveEl = document.getElementById('liveText');
-  const wrap = document.createElement('div');
-  wrap.className = `bubble-wrap ${role}`;
-  const bub = document.createElement('div');
-  bub.className = `bubble ${role}`;
-  if (isHTML) bub.innerHTML = html; else bub.textContent = html;
+// ══ BUBBLES ══
+function addBubble(role,html,isHTML=false){
+  const msgs=document.getElementById('messages');
+  const live=document.getElementById('liveText');
+  const wrap=document.createElement('div');
+  wrap.className=`bwrap ${role}`;
+  const bub=document.createElement('div');
+  bub.className=`bubble ${role}`;
+  if(isHTML)bub.innerHTML=html;else bub.textContent=html;
   wrap.appendChild(bub);
-  msgs.insertBefore(wrap, liveEl);
-  liveEl.scrollIntoView({ behavior:'smooth' });
+  msgs.insertBefore(wrap,live);
+  live.scrollIntoView({behavior:'smooth'});
 }
 
-function showTyping() {
-  const msgs = document.getElementById('messages');
-  const liveEl = document.getElementById('liveText');
-  const wrap = document.createElement('div');
-  wrap.className='bubble-wrap bot'; wrap.id='typingWrap';
-  wrap.innerHTML='<div class="typing-indicator"><span></span><span></span><span></span></div>';
-  msgs.insertBefore(wrap, liveEl);
-  liveEl.scrollIntoView({ behavior:'smooth' });
+function showTyping(){
+  const msgs=document.getElementById('messages');
+  const live=document.getElementById('liveText');
+  const w=document.createElement('div');
+  w.className='bwrap bot';w.id='tw';
+  w.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  msgs.insertBefore(w,live);
+  live.scrollIntoView({behavior:'smooth'});
 }
-function hideTyping() { document.getElementById('typingWrap')?.remove(); }
+function hideTyping(){document.getElementById('tw')?.remove();}
 
-async function send(text) {
-  if (!text.trim() || status==='thinking') return;
+// ══ SEND ══
+async function send(text){
+  if(!text.trim()||status==='thinking')return;
   speechSynthesis.cancel();
   document.getElementById('liveText').textContent='';
-  messages.push({ role:'user', content:text });
-  addBubble('user', text);
-  setStatus('thinking');
-  showTyping();
-  try {
-    const reply = await askClaude(messages);
-    messages.push({ role:'assistant', content:reply });
+  messages.push({role:'user',content:text});
+  addBubble('user',text);
+  setStatus('thinking');showTyping();
+  try{
+    const reply=await askClaude(messages);
+    messages.push({role:'assistant',content:reply});
     hideTyping();
-    addBubble('bot', formatMessage(reply), true);
+    addBubble('bot',fmt(reply),true);
     setStatus('speaking');
-    speakText(reply, ()=>setStatus('idle'));
-  } catch {
-    hideTyping();
-    showError('Connection issue — please try again.');
-    setStatus('idle');
+    speakText(reply,()=>setStatus('idle'));
+  }catch{
+    hideTyping();showErr('Connection issue — please try again.');setStatus('idle');
   }
 }
 
-function sendFromInput() {
-  const inp = document.getElementById('textInput');
-  const val = inp.value.trim();
-  if (!val) return;
-  inp.value='';
-  inp.focus();
-  send(val);
+function sendFromInput(){
+  const inp=document.getElementById('textInput');
+  const val=inp.value.trim();
+  if(!val)return;
+  inp.value='';inp.focus();send(val);
 }
+function handleKey(e){if(e.key==='Enter'){e.preventDefault();sendFromInput();}}
 
-function handleKey(e) { if (e.key==='Enter') { e.preventDefault(); sendFromInput(); } }
-
-function handleOrb() {
-  if (status==='thinking') return;
-  if (status==='speaking') { speechSynthesis.cancel(); setStatus('idle'); return; }
-  if (status==='listening') { recognition?.stop(); setStatus('idle'); return; }
+// ══ ORB ══
+function handleOrb(){
+  if(status==='thinking')return;
+  if(status==='speaking'){speechSynthesis.cancel();setStatus('idle');return;}
+  if(status==='listening'){recognition?.stop();setStatus('idle');return;}
   startListening();
 }
 
-function startListening() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError('Voice not available — please type below.'); return; }
+function startListening(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showErr('Voice not available — please type below.');return;}
   speechSynthesis.cancel();
-  recognition = new SR();
-  recognition.continuous=false; recognition.interimResults=true; recognition.lang='en-US';
+  recognition=new SR();
+  recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';
   setStatus('listening');
-  recognition.onresult = (e) => {
-    const t = Array.from(e.results).map(r=>r[0].transcript).join('');
+  recognition.onresult=(e)=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('');
     document.getElementById('liveText').textContent=t;
-    if (e.results[e.results.length-1].isFinal) { recognition.stop(); send(t); }
+    if(e.results[e.results.length-1].isFinal){recognition.stop();send(t);}
   };
-  recognition.onerror = (e) => {
+  recognition.onerror=(e)=>{
     setStatus('idle');
-    if (e.error==='not-allowed') showError('Microphone access denied — please type instead.');
-    else showError("Couldn't hear that — try again or type below.");
+    if(e.error==='not-allowed')showErr('Microphone access denied — please type instead.');
+    else showErr("Couldn't hear that — try again or type below.");
   };
-  recognition.onend = () => { if (status==='listening') setStatus('idle'); };
+  recognition.onend=()=>{if(status==='listening')setStatus('idle');};
   recognition.start();
 }
 
-async function beginSession() {
-  document.getElementById('home').style.display='none';
-  document.getElementById('chat').style.display='flex';
-  setStatus('thinking');
-  showTyping();
-  try {
-    const reply = await askClaude([{ role:'user', content:'Hello' }]);
-    messages.push({ role:'assistant', content:reply });
+// ══ BEGIN CHAT ══
+async function beginChat(){
+  document.getElementById('h-sub').textContent=`${profile.people} people · ${profile.dietary||'no restrictions'}`;
+  setStatus('thinking');showTyping();
+  const intro=`Hello, I just finished setting up. Here's what I know: ${profile.people} people in the home, dietary needs are ${profile.dietary||'none'}, memberships include ${profile.memberships.join(', ')||'none'}, delivery preference is ${profile.delivery}, and occasions to track: ${profile.occasions.join(', ')||'general holidays'}.`;
+  try{
+    const reply=await askClaude([{role:'user',content:intro}]);
+    messages.push({role:'assistant',content:reply});
     hideTyping();
-    addBubble('bot', formatMessage(reply), true);
+    addBubble('bot',fmt(reply),true);
     setStatus('speaking');
-    speakText(reply, ()=>setStatus('idle'));
-  } catch {
-    hideTyping();
-    showError('Could not connect — check your internet and try again.');
-    setStatus('idle');
+    speakText(reply,()=>setStatus('idle'));
+  }catch{
+    hideTyping();showErr('Could not connect — check your internet.');setStatus('idle');
   }
-  setTimeout(()=>document.getElementById('textInput').focus(), 400);
+  setTimeout(()=>document.getElementById('textInput').focus(),400);
 }
 
 speechSynthesis.getVoices();
-speechSynthesis.onvoiceschanged = ()=>speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
 </script>
 </body>
 </html>
