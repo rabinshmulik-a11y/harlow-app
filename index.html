@@ -465,7 +465,7 @@ async function send(text){
   addBubble('user',text);
   setStatus('thinking');showTyping();
   try{
-    const reply=await askClaude(messages);
+    const reply=await askGroq(messages);
     messages.push({role:'assistant',content:reply});
     hideTyping();
     addBubble('bot',fmt(reply),true);
@@ -519,7 +519,7 @@ async function beginChat(){
   setStatus('thinking');showTyping();
   const intro=`Hello, I just finished setting up. Here's what I know: ${profile.people} people in the home, dietary needs are ${profile.dietary||'none'}, memberships include ${profile.memberships.join(', ')||'none'}, delivery preference is ${profile.delivery}, and occasions to track: ${profile.occasions.join(', ')||'general holidays'}.`;
   try{
-    const reply=await askClaude([{role:'user',content:intro}]);
+    const reply=await askGroq([{role:'user',content:intro}]);
     messages.push({role:'assistant',content:reply});
     hideTyping();
     addBubble('bot',fmt(reply),true);
