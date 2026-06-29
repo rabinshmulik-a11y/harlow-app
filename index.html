@@ -399,14 +399,15 @@ function fmt(text) {
 }
 
 // ══ API ══
-async function askClaude(msgs) {
+async function askGroq(msgs) {
   const res = await fetch('/api/chat',{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:buildSystem(),messages:msgs})
-  });
+body:JSON.stringify({
+  system: buildSystem(),
+  messages: msgs
+})  });
   const data = await res.json();
-  return data.content?.map(b=>b.text||'').join('')||"I'm having trouble connecting right now.";
-}
+return data.content || "I'm having trouble connecting right now.";}
 
 // ══ STATUS ══
 function setStatus(s){
