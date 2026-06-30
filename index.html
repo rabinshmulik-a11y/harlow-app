@@ -531,11 +531,25 @@ function setStatus(s){
 }
 
 function showErr(msg){
-  const e=document.getElementById('errBox');
-  e.textContent=msg;e.style.display='block';
-  setTimeout(()=>e.style.display='none',5000);
-}
+  const loginErr = document.getElementById('loginErr');
 
+  if (loginErr && document.getElementById('loginScreen').style.display !== 'none') {
+    loginErr.textContent = msg;
+    loginErr.style.display = 'block';
+    setTimeout(() => {
+      loginErr.style.display = 'none';
+    }, 5000);
+    return;
+  }
+
+  const e = document.getElementById('errBox');
+  e.textContent = msg;
+  e.style.display = 'block';
+
+  setTimeout(() => {
+    e.style.display = 'none';
+  }, 5000);
+}
 // ══ BUBBLES ══
 function addBubble(role,html,isHTML=false){
   const msgs=document.getElementById('messages');
