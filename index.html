@@ -567,6 +567,7 @@ HOUSEHOLD PROFILE:
 - People in home: ${profile.people}
 - Dietary needs: ${profile.dietary || 'none specified'}
 - Address: ${profile.street || ''}, ${profile.city || ''}, ${profile.state || ''} ${profile.zip || ''}
+- Household members: ${(profile.membersList || []).map(m => `${m.name}${m.relationship ? ' - ' + m.relationship : ''}${m.age ? ', age ' + m.age : ''}`).join('; ') || 'not listed'}
 - Memberships: ${profile.memberships.join(', ') || 'none'}
 - Delivery preference: ${profile.delivery || 'ask each time'}
 - Preferred stores: ${profile.stores || 'no preference'}
@@ -895,11 +896,12 @@ async function beginChat(){await loadPurchases();
 
     if (saved && saved.household_size) {
       profile.people = saved.household_size;
-      profile.dietary = saved.dietary || 'none';
-      profile.memberships = saved.memberships || [];
-      profile.delivery = saved.delivery_preference || 'Ask me each time';
-      profile.occasions = saved.occasions || [];
-
+profile.dietary = saved.dietary || 'none';
+profile.zip = saved.zip_code || '';
+profile.memberships = saved.memberships || [];
+profile.delivery = saved.delivery_preference || 'Ask me each time';
+profile.occasions = saved.occasions || [];
+profile.membersList = saved.members || [];
       document.getElementById('onboarding').style.display = 'none';
       document.getElementById('chat').style.display = 'flex';
 
