@@ -304,13 +304,17 @@ async function loginUser(email, address = '') {
 
 async function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim();
-  const address = document.getElementById('loginAddress').value.trim();
+  const street = document.getElementById('loginStreet').value.trim();
+const city = document.getElementById('loginCity').value.trim();
+const state = document.getElementById('loginState').value.trim();
+const zip = document.getElementById('loginZip').value.trim();
 
-  if (!email || !address) {
-    showErr('Please enter your email and delivery address.');
-    return;
-  }
+if (!email || !street || !city || !state || !zip) {
+  showErr('Please complete all address fields.');
+  return;
+}
 
+const address = `${street}, ${city}, ${state} ${zip}`;
   const user = await loginUser(email, address);
 
   if (user && user.household_size) {
