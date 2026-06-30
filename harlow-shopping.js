@@ -1143,32 +1143,34 @@ function parseProductSpec(message, savedContext = {}) {
   if (msg.includes("organic")) spec.organic = true;
   if (msg.includes("lactose")) spec.lactoseFree = true;
 
-const noKosherRequirement =
-  msg.includes("no kosher requirement") ||
-  msg.includes("kosher not needed") ||
-  msg.includes("not needed") ||
-  msg.includes("no kosher needed");
+  const noKosherRequirement =
+    msg.includes("no kosher requirement") ||
+    msg.includes("kosher not needed") ||
+    msg.includes("no kosher needed") ||
+    msg.includes("not kosher") ||
+    msg.includes("not needed");
 
-if (noKosherRequirement) {
-  spec.kosherRequired = false;
-  spec.kosherPreferred = false;
-  spec.cholovYisroel = false;
-} else if (msg.includes("cholov") || msg.includes("chalav")) {
-  spec.cholovYisroel = true;
-  spec.kosherRequired = true;
-} else if (
-  msg.includes("kosher required") ||
-  msg.includes("must be kosher") ||
-  msg.includes("has to be kosher")
-) {
-  spec.kosherRequired = true;
-} else if (msg.includes("kosher")) {
-  spec.kosherPreferred = true;
-}
+  if (noKosherRequirement) {
+    spec.kosherRequired = false;
+    spec.kosherPreferred = false;
+    spec.cholovYisroel = false;
+  } else if (msg.includes("cholov") || msg.includes("chalav")) {
+    spec.cholovYisroel = true;
+    spec.kosherRequired = true;
+  } else if (
+    msg.includes("kosher required") ||
+    msg.includes("must be kosher") ||
+    msg.includes("has to be kosher")
+  ) {
+    spec.kosherRequired = true;
+  } else if (msg.includes("kosher")) {
+    spec.kosherPreferred = true;
+  }
 
-if (!noKosherRequirement && savedContext && savedContext.kosherRequired) {
-  spec.kosherRequired = true;
-}
+  if (!noKosherRequirement && savedContext && savedContext.kosherRequired) {
+    spec.kosherRequired = true;
+  }
+
   spec.needItToday =
     msg.includes("today") ||
     msg.includes("now") ||
