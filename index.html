@@ -327,6 +327,22 @@ async function handleLogin() {
     return;
   }
 
+  const checkRes = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      password: '__check_only__'
+    })
+  });
+
+  const checkData = await checkRes.json();
+
+  if (checkData.success) {
+    showErr('That email is already used. Please sign in instead.');
+    return;
+  }
+
   const confirm = prompt('Confirm your password:');
 
   if (confirm !== password) {
@@ -341,7 +357,6 @@ async function handleLogin() {
     document.getElementById('onboarding').style.display = 'flex';
   }
 }
-
 // ══ ONBOARDING ══
 function toggleChip(el) {
   el.classList.toggle('selected');
