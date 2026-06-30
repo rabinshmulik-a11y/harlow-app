@@ -298,6 +298,7 @@ function finishOnboarding() {
 
 // ══ SYSTEM PROMPT ══
 function buildSystem() {
+ const purchaseHistoryText = window.purchaseHistoryText || 'No purchase history yet.';
   const availableStores = Object.entries(STORES)
     .filter(([name, s]) => !s.membership || profile.memberships.includes(s.membership))
     .map(([name]) => name).join(', ');
