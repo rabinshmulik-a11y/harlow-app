@@ -406,11 +406,19 @@ const confirm = document.getElementById('createPasswordConfirm').value.trim();
     return;
   }
 
-  currentUserId = data.user.id;
-  localStorage.setItem('harlowUserId', currentUserId);
+ currentUserId = data.user.id;
+localStorage.setItem('harlowUserId', currentUserId);
 
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('onboarding').style.display = 'flex';
+document.getElementById('loginScreen').style.display = 'none';
+
+const createScreen = document.getElementById('createScreen');
+if (createScreen) {
+  createScreen.style.display = 'none';
+}
+
+document.getElementById('onboarding').style.display = 'flex';
+
+console.log('CREATE ACCOUNT SUCCESS');
 }
  function togglePasswordView() {
   const p = document.getElementById('loginPassword');
@@ -610,6 +618,7 @@ body:JSON.stringify({
   messages: msgs
 })  });
   const data = await res.json();
+ console.log('CREATE ACCOUNT RESPONSE', data);
 return data.content || "I'm having trouble connecting right now.";}
 
 // ══ STATUS ══
