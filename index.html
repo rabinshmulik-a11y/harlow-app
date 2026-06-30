@@ -327,18 +327,31 @@ One person per line.
 <script>
 // ══ STORE DATA ══
 const STORES = {
+  'H-E-B':        { url:'https://www.heb.com/search/?q=', emoji:'🛒', membership:null },
   'HEB':          { url:'https://www.heb.com/search/?q=', emoji:'🛒', membership:null },
+
   'Walmart':      { url:'https://www.walmart.com/search?q=', emoji:'🛒', membership:null },
-  'Amazon Fresh': { url:'https://www.amazon.com/s?k=', emoji:'📦', membership:'Amazon Prime' },
-  'Whole Foods':  { url:'https://www.amazon.com/s?k=', emoji:'🌿', membership:'Amazon Prime' },
+  'Amazon':       { url:'https://www.amazon.com/s?k=', emoji:'📦', membership:null },
+  'Amazon Fresh': { url:'https://www.amazon.com/s?k=', emoji:'📦', membership:null },
+  'Whole Foods':  { url:'https://www.wholefoodsmarket.com/search?text=', emoji:'🌿', membership:null },
+
   'Kroger':       { url:'https://www.kroger.com/search?query=', emoji:'🛒', membership:null },
-  'Costco':       { url:'https://www.costco.com/CatalogSearch?keyword=', emoji:'🏪', membership:'Costco' },
-  'Sams Club':    { url:'https://www.samsclub.com/search?searchTerm=', emoji:'🏬', membership:"Sam's Club" },
+  'Aldi':         { url:'https://www.aldi.us/en/search/?text=', emoji:'🛍', membership:null },
+  'Sprouts':      { url:'https://www.sprouts.com/search/#q=', emoji:'🌱', membership:null },
+  "Trader Joe's": { url:'https://www.traderjoes.com/home/search?q=', emoji:'🛍', membership:null },
+
+  'Costco':       { url:'https://www.costco.com/CatalogSearch?dept=All&keyword=', emoji:'🏪', membership:'Costco' },
+  "Sam's Club":   { url:'https://www.samsclub.com/s/', emoji:'🏬', membership:"Sam's Club" },
+  'Sams Club':    { url:'https://www.samsclub.com/s/', emoji:'🏬', membership:"Sam's Club" },
+
   'Target':       { url:'https://www.target.com/s?searchTerm=', emoji:'🎯', membership:null },
   'Instacart':    { url:'https://www.instacart.com/store/s?k=', emoji:'🥦', membership:null },
-  'Sprouts':      { url:'https://shop.sprouts.com/search?search=', emoji:'🌱', membership:null },
-  'Aldi':         { url:'https://www.aldi.us/en/search/?text=', emoji:'🛍', membership:null },
+
   'Walgreens':    { url:'https://www.walgreens.com/search/results.jsp?Ntt=', emoji:'💊', membership:null },
+  'CVS':          { url:'https://www.cvs.com/search?searchTerm=', emoji:'💊', membership:null },
+
+  'Houston Kosher':         { url:'https://www.google.com/search?q=kosher+', emoji:'✡️', membership:null },
+  'Houston Kosher (Local)': { url:'https://www.google.com/search?q=kosher+', emoji:'✡️', membership:null }
 };
 
 // ══ USER PROFILE ══
@@ -887,11 +900,22 @@ async function handleHouseholdCommand(text) {
 
   const data = await res.json();
 
-  if (data.success) {
-    addBubble('user', text);
-    addBubble('bot', `Added ${name} to your household.`);
-    return true;
-  }
+ if (data.success) {
+  profile.membersList = profile.membersList || [];
+
+  profile.membersList.push({
+    name,
+    relationship,
+    age,
+    notes: ''
+  });
+
+  profile.people = profile.membersList.length;
+
+  addBubble('user', text);
+  addBubble('bot', `Added ${name} to your household. Your household now has ${profile.people} members.`);
+  return true;
+}
 
   showErr(data.error || 'Could not update household.');
   return true;
