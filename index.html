@@ -157,6 +157,15 @@
     </button>
   </div>
 </div>
+ function togglePasswordView() {
+  const p1 = document.getElementById('loginPassword');
+  const p2 = document.getElementById('loginPasswordConfirm');
+
+  const showing = p1.type === 'text';
+
+  p1.type = showing ? 'password' : 'text';
+  p2.type = showing ? 'password' : 'text';
+}
 <!-- ══ ONBOARDING ══ -->
 <div id="onboarding">
   <div style="text-align:center;margin-bottom:20px">
