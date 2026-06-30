@@ -520,7 +520,7 @@ function startListening(){
 }
 
 // ══ BEGIN CHAT ══
-async function beginChat(){
+async function beginChat(){await loadPurchases();
   document.getElementById('h-sub').textContent=`${profile.people} people · ${profile.dietary||'no restrictions'}`;
   setStatus('thinking');showTyping();
   const intro=`Hello, I just finished setting up. Here's what I know: ${profile.people} people in the home, dietary needs are ${profile.dietary||'none'}, memberships include ${profile.memberships.join(', ')||'none'}, delivery preference is ${profile.delivery}, and occasions to track: ${profile.occasions.join(', ')||'general holidays'}.`;
