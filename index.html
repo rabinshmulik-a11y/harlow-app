@@ -272,13 +272,15 @@ let muted = false;
 let recognition = null;
 let currentUserId = localStorage.getItem('harlowUserId') || null;
 
-async function loginUser(email, address = '') {
+async function loginUser(email, password) {
   const res = await fetch('/api/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       email,
-      primary_address: address
+      password
     })
   });
 
@@ -290,6 +292,7 @@ async function loginUser(email, address = '') {
     return data.user;
   }
 
+  showErr(data.error || 'Login failed.');
   return null;
 }
 
