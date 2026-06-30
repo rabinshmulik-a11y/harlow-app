@@ -29,15 +29,17 @@ const { email, phone, primary_address } = req.body;
     }
 
     const createResponse = await supabaseFetch('users', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-     body: JSON.stringify({
-  name: 'New User',
-  email: email || null,
-  phone: phone || null,
-  primary_address: primary_address || null
+  method: 'POST',
+  headers: { Prefer: 'return=representation' },
+  body: JSON.stringify({
+    name: 'New User',
+    email: email || null,
+    phone: phone || null,
+    primary_address: primary_address || null
+  })
 });
-    const created = await createResponse.json();
+
+const created = await createResponse.json();
 
     return res.status(200).json({
       success: true,
