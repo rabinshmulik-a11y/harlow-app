@@ -710,7 +710,58 @@ function showTyping(){
   live.scrollIntoView({behavior:'smooth'});
 }
 function hideTyping(){document.getElementById('tw')?.remove();}
+async function handleHouseholdCommand(text) {
+  const lower = text.toLowerCase();
 
+  if (!lower.includes('add') || !lower.includes('household')) {
+    return false;
+  }
+
+  const nameMatch = text.match(/named\s+([A-Za-z]+)/i) || text.match(/add\s+([A-Za-z]+)/i);
+  const name = nameMatch ? nameMatch[1] : '';
+
+  if (!name) {
+    return false;
+  }
+
+  const relationship =
+    lower.includes('son') ? 'son' :
+    lower.includes('daughter') ? 'daughter' :
+    lower.includes('baby') ? 'child' :
+    lower.includes('wife') ? 'wife' :
+    lower.includes('husband') ? 'husband' :
+    'household member';
+
+  const age =
+    lower.includes('newborn') ? 'newborn' :
+    '';
+
+  const res = await fetch('/api/update-household', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'add_member',
+      user_id: currentUserId,
+      member: {
+        name,
+        relationship,
+        age,
+        notes: ''
+      }
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    addBubble('user', text);
+    addBubble('bot', `Added ${name} to your household.`);
+    return true;
+  }
+
+  showErr(data.error || 'Could not update household.');
+  return true;
+}
 // ══ SEND ══
 async function send(text){
   if(!text.trim()||status==='thinking')return;
