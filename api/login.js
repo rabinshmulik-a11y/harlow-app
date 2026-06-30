@@ -36,7 +36,7 @@ const { email, phone, primary_address } = req.body;
   email: email || null,
   phone: phone || null,
   primary_address: primary_address || null
-})
+});
     const created = await createResponse.json();
 
     return res.status(200).json({
