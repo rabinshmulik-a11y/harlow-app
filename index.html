@@ -522,12 +522,18 @@ async function loadPurchases() {
   try {
     const res = await fetch('/api/get-purchases');
     const purchases = await res.json();
-
+const predRes = await fetch('/api/predict-restock');
+const predictions = await predRes.json();
     window.purchaseHistoryText = purchases
       .slice(0, 10)
       .map(p => `${p.item_name} from ${p.store} for $${p.price} on ${new Date(p.purchased_at).toLocaleDateString()}`)
       .join('\n');
+const predictionText = predictions
+  .slice(0, 10)
+  .map(p => `${p.item_name} may need restocking around ${new Date(p.estimated_restock_date).toLocaleDateString()}`)
+  .join('\n');
 
+window.purchaseHistoryText += '\n\nRESTOCK PREDICTIONS:\n' + predictionText;
     if (!window.purchaseHistoryText) {
       window.purchaseHistoryText = 'No purchase history yet.';
     }
