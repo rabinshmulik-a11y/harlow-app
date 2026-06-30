@@ -129,7 +129,21 @@
 </style>
 </head>
 <body>
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen">
+  <div class="ob-card">
+    <h2>Welcome to Harlow</h2>
+    <p>Sign in so Harlow can remember your household across devices.</p>
 
+    <label class="ob-label">Email</label>
+    <input class="ob-input" id="loginEmail" type="email" placeholder="you@example.com"/>
+
+    <label class="ob-label">ZIP code</label>
+    <input class="ob-input" id="loginZip" type="text" placeholder="e.g. 77096"/>
+
+    <button class="ob-next" type="button" onclick="handleLogin()">Continue →</button>
+  </div>
+</div>
 <!-- ══ ONBOARDING ══ -->
 <div id="onboarding">
   <div style="text-align:center;margin-bottom:20px">
