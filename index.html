@@ -518,7 +518,24 @@ function startListening(){
   recognition.onend=()=>{if(status==='listening')setStatus('idle');};
   recognition.start();
 }
+async function loadPurchases() {
+  try {
+    const res = await fetch('/api/get-purchases');
+    const purchases = await res.json();
 
+    window.purchaseHistoryText = purchases
+      .slice(0, 10)
+      .map(p => `${p.item_name} from ${p.store} for $${p.price} on ${new Date(p.purchased_at).toLocaleDateString()}`)
+      .join('\n');
+
+    if (!window.purchaseHistoryText) {
+      window.purchaseHistoryText = 'No purchase history yet.';
+    }
+
+  } catch (err) {
+    window.purchaseHistoryText = 'Could not load purchase history.';
+  }
+}
 // ══ BEGIN CHAT ══
 async function beginChat(){await loadPurchases();
   document.getElementById('h-sub').textContent=`${profile.people} people · ${profile.dietary||'no restrictions'}`;
