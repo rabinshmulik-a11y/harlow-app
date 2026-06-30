@@ -130,20 +130,32 @@
 </head>
 <body>
 <!-- ══ LOGIN ══ -->
-<div id="loginScreen" style="display:none;flex:1;align-items:center;justify-content:center;padding:28px;">  <div class="ob-card">
+<div id="loginScreen" style="display:none;flex:1;align-items:center;justify-content:center;padding:28px;">
+  <div class="ob-card">
     <h2>Welcome to Harlow</h2>
     <p>Sign in so Harlow can remember your household across devices.</p>
 
     <label class="ob-label">Email</label>
     <input class="ob-input" id="loginEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter') handleLogin()"/>
-<label class="ob-label">Password</label>
-<input class="ob-input" id="loginPassword" type="password" placeholder="Create or enter password" onkeydown="if(event.key==='Enter') handleLogin()"/>
-<div id="loginErr" style="display:none;margin:0 0 10px;padding:8px 12px;background:rgba(220,50,50,.14);border:1px solid rgba(220,50,50,.28);border-radius:10px;font-size:13px;color:#fca5a5;text-align:center;"></div>
-<button class="ob-next" type="button" onclick="handleLogin()">Sign In →</button>
 
-<button class="ob-next" type="button" onclick="createAccount()" style="margin-top:8px;background:rgba(255,255,255,.1);">
-  Create Account
-</button>  </div>
+    <label class="ob-label">Password</label>
+    <input class="ob-input" id="loginPassword" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter') handleLogin()"/>
+
+    <label class="ob-label">Confirm password</label>
+    <input class="ob-input" id="loginPasswordConfirm" type="password" placeholder="Only needed for new account" onkeydown="if(event.key==='Enter') createAccount()"/>
+
+    <button class="ob-next" type="button" onclick="togglePasswordView()" style="margin-top:0;background:rgba(255,255,255,.1);">
+      Show Passwords
+    </button>
+
+    <div id="loginErr" style="display:none;margin:10px 0;padding:8px 12px;background:rgba(220,50,50,.14);border:1px solid rgba(220,50,50,.28);border-radius:10px;font-size:13px;color:#fca5a5;text-align:center;"></div>
+
+    <button class="ob-next" type="button" onclick="handleLogin()">Sign In →</button>
+
+    <button class="ob-next" type="button" onclick="createAccount()" style="margin-top:8px;background:rgba(255,255,255,.1);">
+      Create Account
+    </button>
+  </div>
 </div>
 <!-- ══ ONBOARDING ══ -->
 <div id="onboarding">
