@@ -132,28 +132,50 @@
 <!-- ══ LOGIN ══ -->
 <div id="loginScreen" style="display:none;flex:1;align-items:center;justify-content:center;padding:28px;">
   <div class="ob-card">
-    <h2>Welcome to Harlow</h2>
-    <p>Sign in so Harlow can remember your household across devices.</p>
+    <h2>Welcome back</h2>
+    <p>Sign in to Harlow.</p>
 
     <label class="ob-label">Email</label>
     <input class="ob-input" id="loginEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter') handleLogin()"/>
 
     <label class="ob-label">Password</label>
-    <input class="ob-input" id="loginPassword" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter') handleLogin()"/>
+    <input class="ob-input" id="loginPassword" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') handleLogin()"/>
 
-    <label class="ob-label">Confirm password</label>
-    <input class="ob-input" id="loginPasswordConfirm" type="password" placeholder="Only needed for new account" onkeydown="if(event.key==='Enter') createAccount()"/>
-
-    <button class="ob-next" type="button" onclick="togglePasswordView()" style="margin-top:0;background:rgba(255,255,255,.1);">
-      Show Passwords
-    </button>
+    <button class="ob-next" type="button" onclick="togglePasswordView()">Show Password</button>
 
     <div id="loginErr" style="display:none;margin:10px 0;padding:8px 12px;background:rgba(220,50,50,.14);border:1px solid rgba(220,50,50,.28);border-radius:10px;font-size:13px;color:#fca5a5;text-align:center;"></div>
 
     <button class="ob-next" type="button" onclick="handleLogin()">Sign In →</button>
 
-    <button class="ob-next" type="button" onclick="createAccount()" style="margin-top:8px;background:rgba(255,255,255,.1);">
+    <button class="ob-next" type="button" onclick="showCreateAccount()" style="margin-top:8px;background:rgba(255,255,255,.1);">
       Create Account
+    </button>
+  </div>
+</div>
+
+<!-- ══ CREATE ACCOUNT ══ -->
+<div id="createScreen" style="display:none;flex:1;align-items:center;justify-content:center;padding:28px;">
+  <div class="ob-card">
+    <h2>Create Account</h2>
+    <p>Create your Harlow login.</p>
+
+    <label class="ob-label">Email</label>
+    <input class="ob-input" id="createEmail" type="email" placeholder="you@example.com"/>
+
+    <label class="ob-label">Password</label>
+    <input class="ob-input" id="createPassword" type="password" placeholder="Password"/>
+
+    <label class="ob-label">Confirm password</label>
+    <input class="ob-input" id="createPasswordConfirm" type="password" placeholder="Confirm password"/>
+
+    <button class="ob-next" type="button" onclick="toggleCreatePasswordView()">Show Passwords</button>
+
+    <div id="createErr" style="display:none;margin:10px 0;padding:8px 12px;background:rgba(220,50,50,.14);border:1px solid rgba(220,50,50,.28);border-radius:10px;font-size:13px;color:#fca5a5;text-align:center;"></div>
+
+    <button class="ob-next" type="button" onclick="createAccount()">Create Account →</button>
+
+    <button class="ob-next" type="button" onclick="showLogin()" style="margin-top:8px;background:rgba(255,255,255,.1);">
+      Back to Sign In
     </button>
   </div>
 </div>
@@ -332,9 +354,9 @@ async function handleLogin() {
   }
 }
 async function createAccount() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value.trim();
-  const confirm = document.getElementById('loginPasswordConfirm').value.trim();
+  const email = document.getElementById('createEmail').value.trim();
+const password = document.getElementById('createPassword').value.trim();
+const confirm = document.getElementById('createPasswordConfirm').value.trim();
 
   if (!email || !password || !confirm) {
     showErr('Please enter email, password, and confirm password.');
@@ -371,13 +393,26 @@ async function createAccount() {
   document.getElementById('onboarding').style.display = 'flex';
 }
  function togglePasswordView() {
-  const p1 = document.getElementById('loginPassword');
-  const p2 = document.getElementById('loginPasswordConfirm');
+  const p = document.getElementById('loginPassword');
+  p.type = p.type === 'text' ? 'password' : 'text';
+}
 
+function toggleCreatePasswordView() {
+  const p1 = document.getElementById('createPassword');
+  const p2 = document.getElementById('createPasswordConfirm');
   const showing = p1.type === 'text';
-
   p1.type = showing ? 'password' : 'text';
   p2.type = showing ? 'password' : 'text';
+}
+
+function showCreateAccount() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('createScreen').style.display = 'flex';
+}
+
+function showLogin() {
+  document.getElementById('createScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
 }
 // ══ ONBOARDING ══
 function toggleChip(el) {
