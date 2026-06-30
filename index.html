@@ -314,8 +314,18 @@ const STORES = {
 };
 
 // ══ USER PROFILE ══
-let profile = { people:'', dietary:'', memberships:[], delivery:'', stores:'', occasions:[] };
-let messages = [];
+let profile = {
+  people:'',
+  dietary:'',
+  street:'',
+  city:'',
+  state:'',
+  zip:'',
+  memberships:[],
+  delivery:'',
+  stores:'',
+  occasions:[]
+};let messages = [];
 let status = 'idle';
 let muted = false;
 let recognition = null;
@@ -439,9 +449,14 @@ function getSelected(groupId) {
 
 function goStep(n) {
   if (n === 2) {
-    profile.people = document.getElementById('q1').value || '?';
-    profile.dietary = document.getElementById('q2').value || 'none';
-  }
+  profile.people = document.getElementById('q1').value || '?';
+  profile.dietary = document.getElementById('q2').value || 'none';
+
+  profile.street = document.getElementById('qStreet').value || '';
+  profile.city = document.getElementById('qCity').value || '';
+  profile.state = document.getElementById('qState').value || '';
+  profile.zip = document.getElementById('qZip').value || '';
+}
   if (n === 3) {
     profile.memberships = getSelected('memberships');
   }
@@ -466,7 +481,7 @@ async function finishOnboarding() {
       name: 'Shmuel',
       household_size: Number(profile.people) || null,
       dietary: profile.dietary,
-      zip_code: '',
+      zip_code: profile.zip,
       memberships: profile.memberships,
       delivery_preference: profile.delivery,
       occasions: profile.occasions
@@ -490,6 +505,7 @@ function buildSystem() {
 HOUSEHOLD PROFILE:
 - People in home: ${profile.people}
 - Dietary needs: ${profile.dietary || 'none specified'}
+- Address: ${profile.street || ''}, ${profile.city || ''}, ${profile.state || ''} ${profile.zip || ''}
 - Memberships: ${profile.memberships.join(', ') || 'none'}
 - Delivery preference: ${profile.delivery || 'ask each time'}
 - Preferred stores: ${profile.stores || 'no preference'}
