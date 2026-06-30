@@ -25,12 +25,21 @@ const { email, password, phone, primary_address } = req.body;
     const existing = await findResponse.json();
 
     if (existing && existing.length > 0) {
-      return res.status(200).json({
-        success: true,
-        user: existing[0],
-        created: false
-      });
-    }
+  const user = existing[0];
+
+  if (user.password && user.password !== password) {
+    return res.status(401).json({
+      success: false,
+      error: 'Incorrect password'
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    user,
+    created: false
+  });
+}
 
     const createResponse = await supabaseFetch('users', {
       method: 'POST',
