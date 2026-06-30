@@ -898,7 +898,155 @@ function extractSearchTerm(message) {
 // Uncertainty-honest. Shows confidence level. Feedback buttons.
 // ─────────────────────────────────────────────────────────────
 function renderComparisonCards(rankedStores, searchTerm) {
-  injectHarlowStyles();
+  return renderProductComparisonTable(rankedStores, { productName: searchTerm }, searchTerm);
+}
+function scoreProductMatch(store, spec) {
+  let productConfidence = 70;
+  const productWarnings = [];
+
+  if (spec.size) {
+    productConfidence += 8;
+  } else {
+    productConfidence -= 15;
+    productWarnings.push("Verify size");
+  }
+
+  if (spec.fatPercentage || spec.lactoseFree || spec.organic || spec.cholovYisroel) {
+    productConfidence += 8;
+  } else if (spec.category === "milk") {
+    productConfidence -= 12;
+    productWarnings.push("Milk type not specific");
+  }
+
+  if (spec.kosherRequired || spec.kosherPreferred || spec.cholovYisroel) {
+    if (store.kosherFriendly === "certified") {
+      productConfidence += 15;
+    } else if (["very-good", "good"].includes(store.kosherFriendly)) {
+      productConfidence += 5;
+      productWarnings.push("Verify hechsher");
+    } else {
+      productConfidence -= 15;
+      productWarnings.push("Kosher uncertain");
+    }
+  }
+
+  const matchScore = Math.max(0, Math.min(100, productConfidence));
+  store.productMatchConfidence = matchScore;
+  store.productWarnings = productWarnings;
+  store.score = Math.round((store.score * 0.75) + (matchScore * 0.25));
+
+  return store;
+}
+
+function renderProductComparisonTable(rankedStores, spec, searchTerm) {
+  injectProductComparisonStyles();
+
+  const rows = rankedStores.slice(0, 6).map((store, index) => {
+    const why = [
+      ...(store.reasons || []),
+      store.deliverySpeed === "same-day" ? "same-day option" : "",
+      store.pickupAvailable ? "pickup available" : ""
+    ].filter(Boolean).slice(0, 2).join(", ");
+
+    const warnings = [
+      ...(store.warnings || []),
+      ...(store.productWarnings || []),
+      "No live price",
+      "Verify size",
+      (spec.kosherRequired || spec.kosherPreferred || spec.cholovYisroel) ? "Verify hechsher" : ""
+    ].filter(Boolean).slice(0, 3).join(" · ");
+
+    return `
+      <tr>
+        <td class="hpc-rank">${index + 1}</td>
+        <td>
+          <div class="hpc-store">${store.name}</div>
+          <div class="hpc-small">${why || "Estimated match"}</div>
+        </td>
+        <td>
+          <div>${priceLabelText(store.pricePrior?.level)}</div>
+          <div class="hpc-small">Unit: ${priceLabelText(store.unitPricePrior?.level)}</div>
+        </td>
+        <td>
+          <div>${store.deliverySpeed || "varies"}</div>
+          <div class="hpc-small">${store.pickupAvailable ? "Pickup OK" : "No pickup"}</div>
+        </td>
+        <td>
+          <div>${kosherLabelText(store.kosherFriendly)}</div>
+          <div class="hpc-small">${store.productMatchConfidence || 0}% match</div>
+        </td>
+        <td>
+          <div class="hpc-warning">${warnings}</div>
+          <a class="hpc-link" href="${store.deliveryUrl || store.searchUrl}" target="_blank">Search</a>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <div class="hpc-box">
+      <div class="hpc-title">Product comparison: ${searchTerm}</div>
+      <div class="hpc-note">
+        Estimated only. No live prices. Verify size, current price, availability, and kosher certification on the store page.
+      </div>
+
+      <div class="hpc-spec">
+        ${renderSpecPill("Product", spec.productName)}
+        ${renderSpecPill("Brand", spec.brand)}
+        ${renderSpecPill("Size", spec.size)}
+        ${renderSpecPill("Type", spec.fatPercentage || (spec.lactoseFree ? "lactose-free" : "") || (spec.organic ? "organic" : ""))}
+        ${renderSpecPill("Kosher", spec.cholovYisroel ? "Cholov Yisroel" : spec.kosherRequired ? "required" : spec.kosherPreferred ? "preferred" : "not specified")}
+      </div>
+
+      <div class="hpc-table-wrap">
+        <table class="hpc-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Store</th>
+              <th>Price</th>
+              <th>Speed</th>
+              <th>Kosher</th>
+              <th>Check</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderSpecPill(label, value) {
+  if (!value) return "";
+  return `<span class="hpc-pill">${label}: ${value}</span>`;
+}
+
+function priceLabelText(level) {
+  const map = {
+    "very-low": "Very low",
+    "low": "Low",
+    "low-medium": "Low-med",
+    "medium": "Medium",
+    "medium-high": "Med-high",
+    "high": "High",
+    "varies": "Varies"
+  };
+  return map[level] || "Estimated";
+}
+
+function kosherLabelText(level) {
+  const map = {
+    "certified": "Certified",
+    "very-good": "Very good",
+    "good": "Good",
+    "partial": "Partial",
+    "limited": "Limited",
+    "varies": "Varies"
+  };
+  return map[level] || "Verify";
+}
+injectHarlowStyles();
   const medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣"];
   const speedLabels = {
     "same-day": "🟢 Same-day", "next-day": "🟡 Next-day",
@@ -1049,24 +1197,337 @@ function renderShoppingQuestions(onComplete) {
 // SECTION 10: MAIN INTEGRATION FUNCTION
 // Call this from your existing send-message handler
 // ─────────────────────────────────────────────────────────────
+function parseProductSpec(message, savedContext = {}) {
+  const msg = message.toLowerCase();
+
+  const spec = {
+    originalMessage: message,
+    productName: extractProductName(message),
+    brand: extractBrand(message),
+    size: extractSize(message),
+    quantity: extractQuantity(message),
+    variant: "",
+    fatPercentage: "",
+    kosherRequired: false,
+    kosherPreferred: false,
+    cholovYisroel: false,
+    organic: false,
+    lactoseFree: false,
+    needItToday: false,
+    preferDelivery: true,
+    prioritize: "balanced",
+    category: "general"
+  };
+
+  if (msg.includes("whole milk")) spec.fatPercentage = "whole";
+  if (msg.includes("2%") || msg.includes("2 percent")) spec.fatPercentage = "2%";
+  if (msg.includes("1%") || msg.includes("1 percent")) spec.fatPercentage = "1%";
+  if (msg.includes("skim")) spec.fatPercentage = "skim";
+
+  if (msg.includes("organic")) spec.organic = true;
+  if (msg.includes("lactose")) spec.lactoseFree = true;
+
+  if (msg.includes("cholov") || msg.includes("chalav")) {
+    spec.cholovYisroel = true;
+    spec.kosherRequired = true;
+  }
+
+  if (msg.includes("kosher")) {
+    spec.kosherPreferred = true;
+  }
+
+  if (savedContext && savedContext.kosherRequired) {
+    spec.kosherRequired = true;
+  }
+
+  spec.needItToday =
+    msg.includes("today") ||
+    msg.includes("now") ||
+    msg.includes("asap") ||
+    msg.includes("urgent") ||
+    msg.includes("tonight");
+
+  spec.preferDelivery =
+    msg.includes("delivery") ||
+    msg.includes("deliver") ||
+    msg.includes("ship") ||
+    savedContext.deliveryPreference === "delivery";
+
+  if (msg.includes("pickup") || msg.includes("pick up")) {
+    spec.preferDelivery = false;
+  }
+
+  spec.prioritize =
+    msg.includes("cheap") || msg.includes("cheapest") || msg.includes("price") || msg.includes("budget")
+      ? "price"
+      : msg.includes("fast") || msg.includes("quick") || spec.needItToday
+        ? "speed"
+        : savedContext.priorityPreference || "balanced";
+
+  if (spec.productName.includes("milk")) {
+    spec.category = "milk";
+  } else if (
+    spec.productName.includes("diaper") ||
+    spec.productName.includes("wipe")
+  ) {
+    spec.category = "baby";
+  } else if (
+    spec.productName.includes("paper towel") ||
+    spec.productName.includes("toilet paper") ||
+    spec.productName.includes("detergent")
+  ) {
+    spec.category = "household";
+  } else if (
+    spec.productName.includes("chicken") ||
+    spec.productName.includes("meat") ||
+    spec.productName.includes("beef")
+  ) {
+    spec.category = "kosher-meat";
+    spec.kosherRequired = true;
+  }
+
+  return spec;
+}
+
+function extractProductName(message) {
+  let cleaned = message.toLowerCase();
+
+  cleaned = cleaned
+    .replace(/compare prices for/g, "")
+    .replace(/compare price for/g, "")
+    .replace(/compare/g, "")
+    .replace(/where can i buy/g, "")
+    .replace(/where do i get/g, "")
+    .replace(/where can i get/g, "")
+    .replace(/i need to buy/g, "")
+    .replace(/i need to get/g, "")
+    .replace(/i need/g, "")
+    .replace(/buy/g, "")
+    .replace(/order/g, "")
+    .replace(/delivery today/g, "")
+    .replace(/deliver today/g, "")
+    .replace(/delivery/g, "")
+    .replace(/pickup/g, "")
+    .replace(/today/g, "")
+    .replace(/cheapest/g, "")
+    .replace(/cheap/g, "")
+    .replace(/fastest/g, "")
+    .replace(/kosher/g, "")
+    .replace(/organic/g, "")
+    .replace(/cholov yisroel/g, "")
+    .replace(/chalav yisrael/g, "")
+    .replace(/whole/g, "")
+    .replace(/2%/g, "")
+    .replace(/1%/g, "")
+    .replace(/skim/g, "")
+    .replace(/gallon/g, "")
+    .replace(/half gallon/g, "")
+    .replace(/half-gallon/g, "")
+    .replace(/[?!.]/g, "")
+    .trim();
+
+  return cleaned || "milk";
+}
+
+function extractSize(message) {
+  const msg = message.toLowerCase();
+
+  if (msg.includes("half gallon") || msg.includes("half-gallon")) return "half gallon";
+  if (msg.includes("gallon")) return "gallon";
+  if (msg.includes("quart")) return "quart";
+  if (msg.includes("case")) return "case";
+  if (msg.includes("2-pack") || msg.includes("two pack")) return "2-pack";
+  if (msg.includes("bulk") || msg.includes("family size")) return "bulk/family size";
+
+  const oz = msg.match(/(\d+)\s?oz/);
+  if (oz) return `${oz[1]} oz`;
+
+  return "";
+}
+
+function extractQuantity(message) {
+  const msg = message.toLowerCase();
+
+  const pack = msg.match(/(\d+)[-\s]?pack/);
+  if (pack) return `${pack[1]} pack`;
+
+  const count = msg.match(/(\d+)\s?(bottles|gallons|boxes|bags|cases)/);
+  if (count) return `${count[1]} ${count[2]}`;
+
+  if (msg.includes("bulk")) return "bulk";
+
+  return "";
+}
+
+function extractBrand(message) {
+  const knownBrands = [
+    "fairlife", "horizon", "lactaid", "great value", "heb",
+    "kirkland", "organic valley", "trader joe", "365",
+    "stremicks", "liebers", "mehadrin", "golden flow"
+  ];
+
+  const msg = message.toLowerCase();
+  return knownBrands.find(b => msg.includes(b)) || "";
+}
+
+function getMissingProductDetails(spec) {
+  const missing = [];
+
+  if (!spec.productName) {
+    missing.push("product");
+  }
+
+  if (spec.category === "milk") {
+    if (!spec.fatPercentage && !spec.lactoseFree && !spec.cholovYisroel) {
+      missing.push("milk-type");
+    }
+
+    if (!spec.size) {
+      missing.push("size");
+    }
+
+    if (!spec.kosherRequired && !spec.kosherPreferred && !spec.cholovYisroel) {
+      missing.push("kosher-level");
+    }
+  }
+
+  return missing;
+}
+
+function buildProductSearchTerm(spec) {
+  const parts = [];
+
+  if (spec.cholovYisroel) {
+    parts.push("Cholov Yisroel");
+  } else if (spec.kosherRequired || spec.kosherPreferred) {
+    parts.push("kosher");
+  }
+
+  if (spec.organic) parts.push("organic");
+  if (spec.lactoseFree) parts.push("lactose free");
+  if (spec.brand) parts.push(spec.brand);
+  if (spec.fatPercentage) parts.push(spec.fatPercentage);
+
+  parts.push(spec.productName);
+
+  if (spec.size) parts.push(spec.size);
+  if (spec.quantity) parts.push(spec.quantity);
+
+  return parts
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function renderProductClarifier(spec, missing, originalMessage) {
+  const groups = [];
+
+  if (missing.includes("milk-type")) {
+    groups.push(`
+      <div class="hpc-q">
+        <div class="hpc-q-title">What kind of milk should I compare?</div>
+        <button onclick="send('${escapeForSend(originalMessage)} whole milk')">Whole</button>
+        <button onclick="send('${escapeForSend(originalMessage)} 2% milk')">2%</button>
+        <button onclick="send('${escapeForSend(originalMessage)} 1% milk')">1%</button>
+        <button onclick="send('${escapeForSend(originalMessage)} skim milk')">Skim</button>
+        <button onclick="send('${escapeForSend(originalMessage)} lactose free milk')">Lactose-free</button>
+        <button onclick="send('${escapeForSend(originalMessage)} Cholov Yisroel milk')">Cholov Yisroel</button>
+      </div>
+    `);
+  }
+
+  if (missing.includes("size")) {
+    groups.push(`
+      <div class="hpc-q">
+        <div class="hpc-q-title">What size?</div>
+        <button onclick="send('${escapeForSend(originalMessage)} gallon')">Gallon</button>
+        <button onclick="send('${escapeForSend(originalMessage)} half gallon')">Half gallon</button>
+        <button onclick="send('${escapeForSend(originalMessage)} 2-pack')">2-pack</button>
+        <button onclick="send('${escapeForSend(originalMessage)} bulk family size')">Bulk/family size</button>
+      </div>
+    `);
+  }
+
+  if (missing.includes("kosher-level")) {
+    groups.push(`
+      <div class="hpc-q">
+        <div class="hpc-q-title">Kosher status?</div>
+        <button onclick="send('${escapeForSend(originalMessage)} kosher preferred')">Kosher preferred</button>
+        <button onclick="send('${escapeForSend(originalMessage)} kosher required')">Kosher required</button>
+        <button onclick="send('${escapeForSend(originalMessage)} Cholov Yisroel')">Cholov Yisroel</button>
+        <button onclick="send('${escapeForSend(originalMessage)} no kosher requirement')">Not needed</button>
+      </div>
+    `);
+  }
+
+  return `
+    <div class="hpc-box">
+      <div class="hpc-title">I need a little more detail before comparing.</div>
+      <div class="hpc-note">
+        I don’t want to compare random products. I need the same size/type across stores.
+      </div>
+      ${groups.join("")}
+    </div>
+  `;
+}
+
+function escapeForSend(text) {
+  return String(text)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, " ");
+}
 async function handleShoppingRequest(userMessage, chatContext = {}) {
   injectHarlowStyles();
+  injectProductComparisonStyles();
 
-  const triggers = ["buy","order","purchase","find","where can i get","price of","compare",
-    "cheapest","deliver","ship","pickup","need to get","looking for","shop for","price check",
-    "kosher","where do i get"];
+  const triggers = [
+    "buy", "order", "purchase", "find", "where can i get",
+    "price of", "compare", "cheapest", "deliver", "ship",
+    "pickup", "need to get", "looking for", "shop for",
+    "price check", "kosher", "where do i get"
+  ];
+
   const msg = userMessage.toLowerCase();
   if (!triggers.some(t => msg.includes(t))) return null;
 
-  const searchTerm = extractSearchTerm(userMessage);
-  if (!searchTerm || searchTerm.length < 2) return null;
+  const spec = parseProductSpec(userMessage, chatContext);
+  const missing = getMissingProductDetails(spec);
 
-  const context = parseShoppingContext(userMessage, chatContext);
-  const ranked  = await rankStores(searchTerm, context);
-  const html    = renderComparisonCards(ranked, searchTerm);
-  const storeLinks = ranked.map(s => `[STORE:${s.name}:${searchTerm}]`).join("\n");
+  if (missing.length > 0) {
+    const html = renderProductClarifier(spec, missing, userMessage);
+    return {
+      html,
+      storeLinks: "",
+      ranked: [],
+      searchTerm: spec.productName || "",
+      context: spec,
+      needsClarification: true
+    };
+  }
 
-  return { html, storeLinks, ranked, searchTerm, context };
+  const searchTerm = buildProductSearchTerm(spec);
+  const context = {
+    needItToday: spec.needItToday,
+    preferDelivery: spec.preferDelivery,
+    prioritize: spec.prioritize,
+    quantity: spec.quantity || "normal",
+    category: spec.category || "general",
+    searchTerm,
+    productSpec: spec
+  };
+
+  const ranked = await rankStores(searchTerm, context);
+  const productRanked = ranked.map(store => scoreProductMatch(store, spec));
+  const html = renderProductComparisonTable(productRanked, spec, searchTerm);
+  const storeLinks = productRanked.map(s => `[STORE:${s.name}:${searchTerm}]`).join("\n");
+
+  return {
+    html,
+    storeLinks,
+    ranked: productRanked,
+    searchTerm,
+    context
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1179,7 +1640,147 @@ When a user asks to buy, find, compare, or get a product, do the following:
 //   });
 //   chatContainer.appendChild(questionsEl);
 // ─────────────────────────────────────────────────────────────
+function injectProductComparisonStyles() {
+  if (document.getElementById("harlow-product-comparison-styles")) return;
 
+  const style = document.createElement("style");
+  style.id = "harlow-product-comparison-styles";
+  style.textContent = `
+    .hpc-box {
+      background:#fff;
+      color:#111827;
+      border-radius:14px;
+      padding:12px;
+      margin:10px 0;
+      font-family:inherit;
+      max-width:100%;
+      overflow:hidden;
+    }
+
+    .hpc-title {
+      font-weight:800;
+      font-size:0.95rem;
+      margin-bottom:5px;
+      color:#111827;
+    }
+
+    .hpc-note {
+      font-size:0.75rem;
+      color:#6b7280;
+      line-height:1.35;
+      margin-bottom:10px;
+    }
+
+    .hpc-spec {
+      display:flex;
+      flex-wrap:wrap;
+      gap:5px;
+      margin-bottom:10px;
+    }
+
+    .hpc-pill {
+      font-size:0.70rem;
+      background:#f3f4f6;
+      color:#374151;
+      border-radius:999px;
+      padding:4px 8px;
+    }
+
+    .hpc-table-wrap {
+      width:100%;
+      overflow-x:auto;
+    }
+
+    .hpc-table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:0.72rem;
+      min-width:560px;
+    }
+
+    .hpc-table th {
+      text-align:left;
+      color:#6b7280;
+      font-weight:700;
+      border-bottom:1px solid #e5e7eb;
+      padding:6px 5px;
+      white-space:nowrap;
+    }
+
+    .hpc-table td {
+      border-bottom:1px solid #f3f4f6;
+      padding:7px 5px;
+      vertical-align:top;
+    }
+
+    .hpc-rank {
+      font-weight:800;
+      color:#065f46;
+    }
+
+    .hpc-store {
+      font-weight:800;
+      color:#111827;
+      white-space:nowrap;
+    }
+
+    .hpc-small {
+      font-size:0.66rem;
+      color:#6b7280;
+      line-height:1.25;
+    }
+
+    .hpc-warning {
+      font-size:0.66rem;
+      color:#92400e;
+      line-height:1.25;
+      margin-bottom:5px;
+    }
+
+    .hpc-link {
+      display:inline-block;
+      text-decoration:none;
+      background:#2563eb;
+      color:#fff;
+      padding:4px 8px;
+      border-radius:7px;
+      font-size:0.70rem;
+      font-weight:700;
+    }
+
+    .hpc-q {
+      border-top:1px solid #e5e7eb;
+      padding-top:10px;
+      margin-top:10px;
+    }
+
+    .hpc-q-title {
+      font-size:0.82rem;
+      font-weight:700;
+      margin-bottom:7px;
+      color:#111827;
+    }
+
+    .hpc-q button {
+      border:1px solid #d1d5db;
+      background:#f9fafb;
+      color:#111827;
+      border-radius:999px;
+      padding:6px 10px;
+      margin:3px;
+      font-size:0.75rem;
+      cursor:pointer;
+    }
+
+    .hpc-q button:hover {
+      background:#2563eb;
+      color:#fff;
+      border-color:#2563eb;
+    }
+  `;
+
+  document.head.appendChild(style);
+}
 if (typeof module !== "undefined") {
   module.exports = {
     STORE_RULES, rankStores, scoreStore, renderComparisonCards,
