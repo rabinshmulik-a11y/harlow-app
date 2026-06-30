@@ -8,11 +8,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, phone, primary_address } = req.body;
-
-    if (!email && !phone) {
+const { email, password, phone, primary_address } = req.body;
+    if (!email || !password) {
       return res.status(400).json({
-        error: 'Email or phone is required'
+        error: 'Email and password are required'
       });
     }
 
@@ -40,9 +39,10 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         name: 'New User',
-        email: email || null,
-        phone: phone || null,
-        primary_address: primary_address || null
+email: email || null,
+password: password || null,
+phone: phone || null,
+primary_address: primary_address || null
       })
     });
 
