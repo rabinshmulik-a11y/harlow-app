@@ -296,18 +296,12 @@ async function loginUser(email, address = '') {
 async function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim();
  const password = document.getElementById('loginPassword').value.trim();
-  const street = document.getElementById('loginStreet').value.trim();
-const city = document.getElementById('loginCity').value.trim();
-const state = document.getElementById('loginState').value.trim();
-const zip = document.getElementById('loginZip').value.trim();
+ const password = document.getElementById('loginPassword').value.trim();
 
-if (!email || !street || !city || !state || !zip) {
-  showErr('Please complete all address fields.');
+if (!email || !password) {
+  showErr('Please enter your email and password.');
   return;
 }
-
-const address = `${street}, ${city}, ${state} ${zip}`;
-  const user = await loginUser(email, address);
 
   if (user && user.household_size) {
     document.getElementById('loginScreen').style.display = 'none';
