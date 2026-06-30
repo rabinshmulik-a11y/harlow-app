@@ -761,9 +761,14 @@ function hideTyping(){document.getElementById('tw')?.remove();}
 async function handleHouseholdCommand(text) {
   const lower = text.toLowerCase();
 
-  if (!lower.includes('add') || !lower.includes('household')) {
-    return false;
-  }
+ if (
+  !lower.includes('add') &&
+  !lower.includes('new baby') &&
+  !lower.includes('another kid') &&
+  !lower.includes('another child')
+) {
+  return false;
+}
 
   const nameMatch = text.match(/named\s+([A-Za-z]+)/i) || text.match(/add\s+([A-Za-z]+)/i);
   const name = nameMatch ? nameMatch[1] : '';
