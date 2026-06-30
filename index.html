@@ -331,18 +331,17 @@ async function handleLogin() {
     document.getElementById('onboarding').style.display = 'flex';
   }
 }
- async function createAccount() {
+async function createAccount() {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
+  const confirm = document.getElementById('loginPasswordConfirm').value.trim();
 
-  if (!email || !password) {
-    showErr('Please enter an email and password.');
+  if (!email || !password || !confirm) {
+    showErr('Please enter email, password, and confirm password.');
     return;
   }
 
-  const confirm = prompt('Confirm your password:');
-
-  if (confirm !== password) {
+  if (password !== confirm) {
     showErr('Passwords do not match.');
     return;
   }
