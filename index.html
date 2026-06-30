@@ -318,6 +318,29 @@ async function handleLogin() {
     document.getElementById('onboarding').style.display = 'flex';
   }
 }
+ async function createAccount() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+
+  if (!email || !password) {
+    showErr('Please enter an email and password.');
+    return;
+  }
+
+  const confirm = prompt('Confirm your password:');
+
+  if (confirm !== password) {
+    showErr('Passwords do not match.');
+    return;
+  }
+
+  const user = await loginUser(email, password);
+
+  if (user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('onboarding').style.display = 'flex';
+  }
+}
 
 // ══ ONBOARDING ══
 function toggleChip(el) {
