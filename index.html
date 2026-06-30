@@ -945,19 +945,24 @@ async function send(text){
         priorityPreference: getUserProfile().priorityPreference
       });
 
-      if (shopping) {
-        hideTyping();
+     if (shopping) {
+  hideTyping();
 
-        const cardBubble = addBubble('bot', shopping.html, true);
+  const cardBubble = addBubble('bot', shopping.html, true);
 
-        if (typeof attachFeedbackHandlers === 'function') {
-          attachFeedbackHandlers(cardBubble);
-        }
+  if (typeof attachFeedbackHandlers === 'function') {
+    attachFeedbackHandlers(cardBubble);
+  }
 
-        messageForAI += "\n\nStore options from Harlow's shopping engine:\n" + shopping.storeLinks;
+  if (shopping.needsClarification) {
+    setStatus('idle');
+    return;
+  }
 
-        showTyping();
-      }
+  messageForAI += "\n\nStore options from Harlow's shopping engine:\n" + shopping.storeLinks;
+
+  showTyping();
+}
     }
 
     messages.push({
