@@ -611,28 +611,6 @@ async function beginChat(){await loadPurchases();
   loadProfileOnStart();
 })();
 
-  loadProfileOnStart();
-})();  try {
-    const res = await fetch('/api/load-profile');
-    const saved = await res.json();
-
-    if (saved && saved.household_size) {
-      profile.people = saved.household_size;
-      profile.dietary = saved.dietary || 'none';
-      profile.memberships = saved.memberships || [];
-      profile.delivery = saved.delivery_preference || 'Ask me each time';
-      profile.occasions = saved.occasions || [];
-
-      document.getElementById('onboarding').style.display = 'none';
-      document.getElementById('chat').style.display = 'flex';
-
-      beginChat();
-    }
-  } catch (err) {
-    console.log('No saved profile yet');
-  }
-}
-
 loadProfileOnStart();
 speechSynthesis.getVoices();
 speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
