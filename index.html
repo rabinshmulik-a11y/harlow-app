@@ -135,9 +135,9 @@
     <p>Sign in so Harlow can remember your household across devices.</p>
 
     <label class="ob-label">Email</label>
-    <input class="ob-input" id="loginEmail" type="email" placeholder="you@example.com"/>
+    <input class="ob-input" id="loginEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter') handleLogin()"/>
 <label class="ob-label">Password</label>
-<input class="ob-input" id="loginPassword" type="password" placeholder="Create or enter password"/>
+<input class="ob-input" id="loginPassword" type="password" placeholder="Create or enter password" onkeydown="if(event.key==='Enter') handleLogin()"/>
 
     <button class="ob-next" type="button" onclick="handleLogin()">Continue →</button>
   </div>
