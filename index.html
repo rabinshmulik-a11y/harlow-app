@@ -229,11 +229,17 @@
 List everyone living in the home, including yourself.
 One person per line.
 </label>
-   <input class="ob-input" id="member1" placeholder="Name, relationship, age — e.g. Basi, daughter, 6"/>
-<input class="ob-input" id="member2" placeholder="Name, relationship, age"/>
-<input class="ob-input" id="member3" placeholder="Name, relationship, age"/>
-<input class="ob-input" id="member4" placeholder="Name, relationship, age"/>
-<input class="ob-input" id="member5" placeholder="Name, relationship, age"/>
+   <div id="memberContainer">
+  <input class="ob-input memberInput" placeholder="Name, relationship, age — e.g. Basi, daughter, 6"/>
+</div>
+
+<button
+  type="button"
+  class="ob-next"
+  style="margin-bottom:12px;background:rgba(255,255,255,.1);"
+  onclick="addMemberField()">
+  + Add Another Person
+</button>
     <button class="ob-next" onclick="goStep(2)">Next →</button>
   </div>
 
@@ -477,6 +483,15 @@ function showLogin() {
   document.getElementById('loginScreen').style.display = 'flex';
 }
 // ══ ONBOARDING ══
+ function addMemberField() {
+  const container = document.getElementById('memberContainer');
+
+  const input = document.createElement('input');
+  input.className = 'ob-input memberInput';
+  input.placeholder = 'Name, relationship, age';
+
+  container.appendChild(input);
+}
 function toggleChip(el) {
   el.classList.toggle('selected');
 }
@@ -496,8 +511,10 @@ function goStep(n) {
   profile.city = document.getElementById('qCity').value || '';
   profile.state = document.getElementById('qState').value || '';
   profile.zip = document.getElementById('qZip').value || '';
-   profile.membersList = [1,2,3,4,5].map(i => {
-  const raw = document.getElementById(`member${i}`).value.trim();
+   profile.membersList = Array.from(
+  document.querySelectorAll('.memberInput')
+).map(input => {
+  const raw = input.value.trim();
   const parts = raw.split(',').map(x => x.trim());
 
   return {
