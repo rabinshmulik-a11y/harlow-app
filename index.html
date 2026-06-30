@@ -899,7 +899,12 @@ async function beginChat(){await loadPurchases();
     if (saved && saved.household_size) {
       profile.people = saved.household_size;
 profile.dietary = saved.dietary || 'none';
+
+profile.street = saved.street || '';
+profile.city = saved.city || '';
+profile.state = saved.state || '';
 profile.zip = saved.zip_code || '';
+
 profile.memberships = saved.memberships || [];
 profile.delivery = saved.delivery_preference || 'Ask me each time';
 profile.occasions = saved.occasions || [];
