@@ -595,8 +595,16 @@ async function beginChat(){await loadPurchases();
   }
   setTimeout(()=>document.getElementById('textInput').focus(),400);
 }
-async function loadProfileOnStart() {
-  try {
+(async function startApp() {
+  if (!currentUserId) {
+    const email = prompt('Enter your email to log in to Harlow:');
+    if (email) {
+      await loginUser(email.trim());
+    }
+  }
+
+  loadProfileOnStart();
+})();  try {
     const res = await fetch('/api/load-profile');
     const saved = await res.json();
 
