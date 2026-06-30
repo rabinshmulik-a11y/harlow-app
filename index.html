@@ -289,8 +289,24 @@ function goStep(n) {
   }
 }
 
-function finishOnboarding() {
+async function finishOnboarding() {
   profile.occasions = getSelected('occasions');
+
+  await fetch('/api/save-profile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: 3,
+      name: 'Shmuel',
+      household_size: Number(profile.people) || null,
+      dietary: profile.dietary,
+      zip_code: '',
+      memberships: profile.memberships,
+      delivery_preference: profile.delivery,
+      occasions: profile.occasions
+    })
+  });
+
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('chat').style.display = 'flex';
   beginChat();
