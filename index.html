@@ -603,24 +603,28 @@ function setStatus(s){
 }
 
 function showErr(msg){
-  const loginErr = document.getElementById('loginErr');
+  const createErr = document.getElementById('createErr');
+  if (createErr && document.getElementById('createScreen')?.style.display !== 'none') {
+    createErr.textContent = msg;
+    createErr.style.display = 'block';
+    setTimeout(() => createErr.style.display = 'none', 5000);
+    return;
+  }
 
-  if (loginErr && document.getElementById('loginScreen').style.display !== 'none') {
+  const loginErr = document.getElementById('loginErr');
+  if (loginErr && document.getElementById('loginScreen')?.style.display !== 'none') {
     loginErr.textContent = msg;
     loginErr.style.display = 'block';
-    setTimeout(() => {
-      loginErr.style.display = 'none';
-    }, 5000);
+    setTimeout(() => loginErr.style.display = 'none', 5000);
     return;
   }
 
   const e = document.getElementById('errBox');
-  e.textContent = msg;
-  e.style.display = 'block';
-
-  setTimeout(() => {
-    e.style.display = 'none';
-  }, 5000);
+  if (e) {
+    e.textContent = msg;
+    e.style.display = 'block';
+    setTimeout(() => e.style.display = 'none', 5000);
+  }
 }
 // ══ BUBBLES ══
 function addBubble(role,html,isHTML=false){
