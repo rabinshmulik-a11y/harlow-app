@@ -271,14 +271,16 @@ let messages = [];
 let status = 'idle';
 let muted = false;
 let recognition = null;
- let currentUserId = localStorage.getItem('harlowUserId') || null;
- async function loginUser(email) {
+let currentUserId = localStorage.getItem('harlowUserId') || null;
+
+async function loginUser(email, address = '') {
   const res = await fetch('/api/login', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      primary_address: address
+    })
   });
 
   const data = await res.json();
@@ -290,6 +292,26 @@ let recognition = null;
   }
 
   return null;
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const address = document.getElementById('loginAddress').value.trim();
+
+  if (!email || !address) {
+    showErr('Please enter your email and delivery address.');
+    return;
+  }
+
+  const user = await loginUser(email, address);
+
+  if (user && user.household_size) {
+    document.getElementById('loginScreen').style.display = 'none';
+    loadProfileOnStart();
+  } else {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('onboarding').style.display = 'flex';
+  }
 }
 
 // ══ ONBOARDING ══
