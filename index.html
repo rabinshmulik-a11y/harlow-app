@@ -316,7 +316,7 @@ async function finishOnboarding() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      id: 3,
+      id: currentUserId,
       name: 'Shmuel',
       household_size: Number(profile.people) || null,
       dietary: profile.dietary,
