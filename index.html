@@ -351,7 +351,10 @@ let status = 'idle';
 let muted = false;
 let recognition = null;
 let currentUserId = localStorage.getItem('harlowUserId') || null;
-
+ 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 async function loginUser(email, password) {
   const res = await fetch('/api/login', {
     method: 'POST',
@@ -379,7 +382,12 @@ async function loginUser(email, password) {
 async function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
-
+ 
+if (!isValidEmail(email)) {
+  showErr('Please enter a valid email address.');
+  return;
+}
+ 
   if (!email || !password) {
     showErr('Please enter your email and password.');
     return;
@@ -396,9 +404,14 @@ async function handleLogin() {
   }
 }
 async function createAccount(event) {
-  if (event) event.preventDefault();  const email = document.getElementById('createEmail').value.trim();
+  if (event) event.preventDefault();  
+const email = document.getElementById('createEmail').value.trim();
 const password = document.getElementById('createPassword').value.trim();
 const confirm = document.getElementById('createPasswordConfirm').value.trim();
+ if (!isValidEmail(email)) {
+  showErr('Please enter a valid email address.');
+  return;
+}
 
   if (!email || !password || !confirm) {
     showErr('Please enter email, password, and confirm password.');
