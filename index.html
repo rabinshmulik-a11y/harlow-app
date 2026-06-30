@@ -258,6 +258,7 @@ let messages = [];
 let status = 'idle';
 let muted = false;
 let recognition = null;
+ let currentUserId = localStorage.getItem('harlowUserId') || null;
 
 // ══ ONBOARDING ══
 function toggleChip(el) {
