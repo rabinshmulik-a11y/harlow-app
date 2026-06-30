@@ -172,8 +172,7 @@
 
     <div id="createErr" style="display:none;margin:10px 0;padding:8px 12px;background:rgba(220,50,50,.14);border:1px solid rgba(220,50,50,.28);border-radius:10px;font-size:13px;color:#fca5a5;text-align:center;"></div>
 
-    <button class="ob-next" type="button" onclick="createAccount()">Create Account →</button>
-
+<button class="ob-next" type="button" onclick="event.preventDefault(); createAccount();">Create Account →</button>
     <button class="ob-next" type="button" onclick="showLogin()" style="margin-top:8px;background:rgba(255,255,255,.1);">
       Back to Sign In
     </button>
@@ -374,8 +373,8 @@ async function handleLogin() {
     document.getElementById('onboarding').style.display = 'flex';
   }
 }
-async function createAccount() {
-  const email = document.getElementById('createEmail').value.trim();
+async function createAccount(event) {
+  if (event) event.preventDefault();  const email = document.getElementById('createEmail').value.trim();
 const password = document.getElementById('createPassword').value.trim();
 const confirm = document.getElementById('createPasswordConfirm').value.trim();
 
