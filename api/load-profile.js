@@ -8,13 +8,27 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing user id' });
     }
 
-    const response = await supabaseFetch(
+    const userResponse = await supabaseFetch(
       `users?select=*&id=eq.${encodeURIComponent(id)}`
     );
 
-    const data = await response.json();
+    const users = await userResponse.json();
+    const user = users[0] || null;
 
-    return res.status(200).json(data[0] || null);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const membersResponse = await supabaseFetch(
+      `household_members?select=*&user_id=eq.${encodeURIComponent(id)}&order=created_at.asc`
+    );
+
+    const members = await membersResponse.json();
+
+    return res.status(200).json({
+      ...user,
+      members: members || []
+    });
 
   } catch (err) {
     return res.status(500).json({
