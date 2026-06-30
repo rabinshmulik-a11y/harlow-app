@@ -714,6 +714,7 @@ function hideTyping(){document.getElementById('tw')?.remove();}
 // ══ SEND ══
 async function send(text){
   if(!text.trim()||status==='thinking')return;
+ if (await handleHouseholdCommand(text)) return;
   speechSynthesis.cancel();
   document.getElementById('liveText').textContent='';
   messages.push({role:'user',content:text});
