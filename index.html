@@ -212,8 +212,6 @@
     </div>
     <h2>👋 Let's set up your home</h2>
     <p>Harlow will learn your household and take care of the rest.</p>
-    <label class="ob-label">How many people live in your home?</label>
-    <input class="ob-input" id="q1" type="number" min="1" max="20" placeholder="e.g. 4"/>
     <label class="ob-label">Any dietary needs or restrictions?</label>
     <input class="ob-input" id="q2" placeholder="e.g. kosher, nut allergy, vegetarian, none"/>
    <label class="ob-label">Street address</label>
@@ -494,7 +492,6 @@ function getSelected(groupId) {
 
 function goStep(n) {
   if (n === 2) {
-  profile.people = document.getElementById('q1').value || '?';
   profile.dietary = document.getElementById('q2').value || 'none';
 
   profile.street = document.getElementById('qStreet').value || '';
