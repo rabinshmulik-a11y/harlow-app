@@ -1046,90 +1046,6 @@ function kosherLabelText(level) {
   };
   return map[level] || "Verify";
 }
-injectHarlowStyles();
-  const medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣"];
-  const speedLabels = {
-    "same-day": "🟢 Same-day", "next-day": "🟡 Next-day",
-    "2-day": "🟠 2-day", "varies": "⚪ Varies"
-  };
-  const priceLabels = {
-    "very-low": "💚💚 Very Low", "low": "💚 Low",
-    "low-medium": "💛 Low-Med",  "medium": "🟡 Medium",
-    "medium-high": "🟠 Med-High","high": "🔴 Higher", "varies": "❓ Varies"
-  };
-  const kosherLabels = {
-    "certified": "✡️ Certified Kosher", "very-good": "✡️ Excellent kosher",
-    "good": "✡️ Good kosher", "partial": "〰️ Some kosher",
-    "limited": "⚠️ Limited kosher", "varies": "❓ Kosher varies"
-  };
-
-  const cards = rankedStores.map((store, i) => {
-    const fee = store.effectiveDeliveryFee === 0
-      ? "Free delivery" : `~$${store.effectiveDeliveryFee.toFixed(2)} delivery`;
-
-    const priceLabel = priceLabels[store.pricePrior?.level] || "❓ Unknown";
-    const liveBadge = store.hasLivePrice
-      ? `<span class="hw-badge hw-badge--live">📡 Live price</span>`
-      : `<span class="hw-badge hw-badge--prior">📊 Estimated</span>`;
-
-    const reasonsHtml = store.reasons.map(r =>
-      `<span class="hw-tag hw-tag--good">✓ ${r}</span>`).join("");
-    const warningsHtml = store.warnings.map(w =>
-      `<span class="hw-tag hw-tag--warn">⚠ ${w}</span>`).join("");
-
-    const uncertaintyHtml = store.uncertaintyNote
-      ? `<div class="hw-uncertainty">💭 ${store.uncertaintyNote}</div>` : "";
-
-    const kosherHtml = store.kosherFriendly && store.kosherFriendly !== "limited"
-      ? `<span class="hw-badge">${kosherLabels[store.kosherFriendly] || ""}</span>` : "";
-
-    const localSuppliersHtml = store.localSuppliers
-      ? store.localSuppliers.map(s =>
-          `<a href="${s.url}" target="_blank" class="hw-btn hw-btn--local">📍 ${s.name}</a>`
-        ).join("") : "";
-
-    const pickupBadge = store.pickupAvailable ? `<span class="hw-badge">🏪 Pickup OK</span>` : "";
-
-    return `
-<div class="hw-store-card ${i === 0 ? "hw-store-card--winner" : ""}">
-  <div class="hw-store-card__header">
-    <span class="hw-store-card__medal">${medals[i]}</span>
-    <span class="hw-store-card__name">${store.name}</span>
-    ${liveBadge}
-    <span class="hw-store-card__score">${store.score} pts</span>
-  </div>
-  <div class="hw-store-card__meta">
-    <span class="hw-badge">${speedLabels[store.deliverySpeed] || store.deliverySpeed}</span>
-    <span class="hw-badge">${priceLabel}</span>
-    ${pickupBadge}
-    <span class="hw-badge">${fee}</span>
-    ${kosherHtml}
-  </div>
-  <div class="hw-store-card__tags">${reasonsHtml}${warningsHtml}</div>
-  ${uncertaintyHtml}
-  <div class="hw-store-card__links">
-    <a href="${store.deliveryUrl}" target="_blank" class="hw-btn hw-btn--primary">🛒 Shop ${store.name}</a>
-    ${store.pickupAvailable ? `<a href="${store.pickupUrl}" target="_blank" class="hw-btn hw-btn--secondary">🏪 Pickup</a>` : ""}
-    ${localSuppliersHtml}
-  </div>
-  <div class="hw-feedback" data-store="${store.storeKey}" data-item="${searchTerm}">
-    <span class="hw-feedback__label">Was this helpful?</span>
-    <button class="hw-feedback__btn" data-rating="loved">👍 Great</button>
-    <button class="hw-feedback__btn" data-rating="poor">👎 Bad rec</button>
-    <button class="hw-feedback__btn" data-rating="rejected">🚫 Never show</button>
-  </div>
-</div>`;
-  }).join("");
-
-  return `
-<div class="hw-comparison">
-  <div class="hw-comparison__header">
-    Comparing stores for <strong>"${searchTerm}"</strong>
-    <span class="hw-comparison__note">📊 Prices estimated — no live data yet</span>
-  </div>
-  <div class="hw-comparison__cards">${cards}</div>
-</div>`;
-}
 
 // Wire feedback buttons after injection
 function attachFeedbackHandlers(container) {
@@ -1227,19 +1143,32 @@ function parseProductSpec(message, savedContext = {}) {
   if (msg.includes("organic")) spec.organic = true;
   if (msg.includes("lactose")) spec.lactoseFree = true;
 
-  if (msg.includes("cholov") || msg.includes("chalav")) {
-    spec.cholovYisroel = true;
-    spec.kosherRequired = true;
-  }
+const noKosherRequirement =
+  msg.includes("no kosher requirement") ||
+  msg.includes("kosher not needed") ||
+  msg.includes("not needed") ||
+  msg.includes("no kosher needed");
 
-  if (msg.includes("kosher")) {
-    spec.kosherPreferred = true;
-  }
+if (noKosherRequirement) {
+  spec.kosherRequired = false;
+  spec.kosherPreferred = false;
+  spec.cholovYisroel = false;
+} else if (msg.includes("cholov") || msg.includes("chalav")) {
+  spec.cholovYisroel = true;
+  spec.kosherRequired = true;
+} else if (
+  msg.includes("kosher required") ||
+  msg.includes("must be kosher") ||
+  msg.includes("has to be kosher")
+) {
+  spec.kosherRequired = true;
+} else if (msg.includes("kosher")) {
+  spec.kosherPreferred = true;
+}
 
-  if (savedContext && savedContext.kosherRequired) {
-    spec.kosherRequired = true;
-  }
-
+if (!noKosherRequirement && savedContext && savedContext.kosherRequired) {
+  spec.kosherRequired = true;
+}
   spec.needItToday =
     msg.includes("today") ||
     msg.includes("now") ||
