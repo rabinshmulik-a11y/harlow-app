@@ -634,7 +634,7 @@ async function finishOnboarding() {
     body: JSON.stringify({
       id: currentUserId,
       name: 'Shmuel',
-      household_size: Number(profile.people) || null,
+      household_size: Number(profile.people) || (profile.membersList || []).length || 1,
       dietary: profile.dietary,
       zip_code: profile.zip,
      street: profile.street,
@@ -1067,31 +1067,49 @@ async function beginChat(){await loadPurchases();
   }
   setTimeout(()=>document.getElementById('textInput').focus(),400);
 }
- async function loadProfileOnStart() {
+async function loadProfileOnStart() {
   try {
     const res = await fetch(`/api/load-profile?id=${currentUserId}`);
     const saved = await res.json();
 
-    if (saved && saved.household_size) {
-      profile.people = saved.household_size;
-profile.dietary = saved.dietary || 'none';
+    if (!saved || saved.error || !saved.id) {
+      localStorage.removeItem('harlowUserId');
+      currentUserId = null;
 
-profile.street = saved.street || '';
-profile.city = saved.city || '';
-profile.state = saved.state || '';
-profile.zip = saved.zip_code || '';
-
-profile.memberships = saved.memberships || [];
-profile.delivery = saved.delivery_preference || 'Ask me each time';
-profile.occasions = saved.occasions || [];
-profile.membersList = saved.members || [];
+      document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('onboarding').style.display = 'none';
-      document.getElementById('chat').style.display = 'flex';
-
-      beginChat();
+      document.getElementById('chat').style.display = 'none';
+      return;
     }
+
+    profile.people = saved.household_size || (saved.members || []).length || 1;
+    profile.dietary = saved.dietary || 'none';
+
+    profile.street = saved.street || '';
+    profile.city = saved.city || '';
+    profile.state = saved.state || '';
+    profile.zip = saved.zip_code || '';
+
+    profile.memberships = saved.memberships || [];
+    profile.delivery = saved.delivery_preference || 'Ask me each time';
+    profile.occasions = saved.occasions || [];
+    profile.membersList = saved.members || [];
+
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('chat').style.display = 'flex';
+
+    beginChat();
+
   } catch (err) {
-    console.log('No saved profile yet');
+    console.log('Could not load saved profile', err);
+
+    localStorage.removeItem('harlowUserId');
+    currentUserId = null;
+
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('chat').style.display = 'none';
   }
 }
 (async function startApp() {
