@@ -511,6 +511,14 @@ async function finishOnboarding() {
       occasions: profile.occasions
     })
   });
+ await fetch('/api/save-members', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    user_id: currentUserId,
+    members: profile.membersList || []
+  })
+});
 
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('chat').style.display = 'flex';
