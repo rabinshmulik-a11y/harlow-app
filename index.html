@@ -469,6 +469,17 @@ function goStep(n) {
   profile.city = document.getElementById('qCity').value || '';
   profile.state = document.getElementById('qState').value || '';
   profile.zip = document.getElementById('qZip').value || '';
+   profile.membersList = [1,2,3,4,5].map(i => {
+  const raw = document.getElementById(`member${i}`).value.trim();
+  const parts = raw.split(',').map(x => x.trim());
+
+  return {
+    name: parts[0] || '',
+    relationship: parts[1] || '',
+    age: parts[2] || '',
+    notes: ''
+  };
+}).filter(m => m.name);
 }
   if (n === 3) {
     profile.memberships = getSelected('memberships');
