@@ -7,15 +7,22 @@ export default async function handler(req, res) {
 
   try {
     const {
-      id = 3,
+      id,
       name = 'Shmuel',
       household_size,
       dietary,
       zip_code,
+      street,
+      city,
+      state,
       memberships = [],
       delivery_preference,
       occasions = []
     } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: 'Missing user id' });
+    }
 
     const response = await supabaseFetch(`users?id=eq.${id}`, {
       method: 'PATCH',
@@ -25,6 +32,9 @@ export default async function handler(req, res) {
         household_size,
         dietary,
         zip_code,
+        street,
+        city,
+        state,
         memberships,
         delivery_preference,
         occasions
