@@ -6,8 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, phone } = req.body;
-
+const { email, phone, primary_address } = req.body;
     if (!email && !phone) {
       return res.status(400).json({ error: 'Email or phone is required' });
     }
@@ -32,13 +31,12 @@ export default async function handler(req, res) {
     const createResponse = await supabaseFetch('users', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({
-        name: 'New User',
-        email: email || null,
-        phone: phone || null
-      })
-    });
-
+     body: JSON.stringify({
+  name: 'New User',
+  email: email || null,
+  phone: phone || null,
+  primary_address: primary_address || null
+})
     const created = await createResponse.json();
 
     return res.status(200).json({
