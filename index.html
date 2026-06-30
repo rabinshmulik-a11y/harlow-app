@@ -298,18 +298,19 @@ async function loginUser(email, password) {
 
 async function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim();
- const password = document.getElementById('loginPassword').value.trim();
- const password = document.getElementById('loginPassword').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
 
-if (!email || !password) {
-  showErr('Please enter your email and password.');
-  return;
-}
+  if (!email || !password) {
+    showErr('Please enter your email and password.');
+    return;
+  }
+
+  const user = await loginUser(email, password);
 
   if (user && user.household_size) {
     document.getElementById('loginScreen').style.display = 'none';
     loadProfileOnStart();
-  } else {
+  } else if (user) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('onboarding').style.display = 'flex';
   }
