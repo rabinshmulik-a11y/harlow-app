@@ -598,10 +598,18 @@ async function beginChat(){await loadPurchases();
 (async function startApp() {
   if (!currentUserId) {
     const email = prompt('Enter your email to log in to Harlow:');
+
     if (email) {
-      await loginUser(email.trim());
+      const user = await loginUser(email.trim());
+
+      if (user && !user.household_size) {
+        return;
+      }
     }
   }
+
+  loadProfileOnStart();
+})();
 
   loadProfileOnStart();
 })();  try {
