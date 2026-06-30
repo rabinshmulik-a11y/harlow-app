@@ -355,6 +355,78 @@ let profile = {
   stores:'',
   occasions:[]
 };let messages = [];
+ function normalizeMembershipsForShopping(memberships) {
+  const joined = (memberships || []).join(' ').toLowerCase();
+  const out = [];
+
+  if (joined.includes('amazon')) out.push('amazon-prime');
+  if (joined.includes('costco')) out.push('costco-gold');
+  if (joined.includes('sam')) out.push('samsclub-club');
+  if (joined.includes('walmart')) out.push('walmart+');
+
+  return out;
+}
+
+function favoriteStoresForShopping() {
+  const raw = (profile.stores || '').toLowerCase();
+
+  const map = {
+    heb: 'heb',
+    'h-e-b': 'heb',
+    walmart: 'walmart',
+    costco: 'costco',
+    amazon: 'amazon',
+    target: 'target',
+    kroger: 'kroger',
+    aldi: 'aldi',
+    sprouts: 'sprouts',
+    'whole foods': 'wholefoods',
+    'trader joe': 'traderjoes',
+    walgreens: 'walgreens',
+    cvs: 'cvs',
+    instacart: 'instacart'
+  };
+
+  return Object.entries(map)
+    .filter(([word]) => raw.includes(word))
+    .map(([, key]) => key);
+}
+
+function getUserProfile() {
+  let saved = {};
+
+  try {
+    saved = JSON.parse(localStorage.getItem('harlowProfile') || '{}');
+  } catch (e) {}
+
+  const dietary = (profile.dietary || '').toLowerCase();
+  const favorites = favoriteStoresForShopping();
+
+  return {
+    householdSize: Number(profile.people) || (profile.membersList || []).length || 1,
+    zipCode: profile.zip || '',
+    memberships: normalizeMembershipsForShopping(profile.memberships),
+    deliveryPreference: (profile.delivery || '').toLowerCase().includes('delivery')
+      ? 'delivery'
+      : (profile.delivery || '').toLowerCase().includes('pickup')
+        ? 'pickup'
+        : 'ask',
+    priorityPreference: saved.priorityPreference || 'balanced',
+
+    kosherRequired: false,
+    kosherPreferred: dietary.includes('kosher'),
+
+    qualityPreference: saved.qualityPreference || 'standard',
+    organicPreference: dietary.includes('organic'),
+
+    dietaryRestrictions: profile.dietary ? [profile.dietary] : [],
+
+    favoriteStores: favorites.length ? favorites : (saved.favoriteStores || ['heb', 'walmart', 'costco']),
+    rejectedStores: saved.rejectedStores || [],
+    pastPurchases: saved.pastPurchases || [],
+    rejectedRecommendations: saved.rejectedRecommendations || []
+  };
+}
 let status = 'idle';
 let muted = false;
 let recognition = null;
@@ -620,6 +692,13 @@ FORMATTING — critical:
 - No asterisks, hashtags, or markdown. Plain conversational text only.
 - End each reply with one natural follow-up question.
 
+SHOPPING INTELLIGENCE:
+${typeof HARLOW_SHOPPING_SYSTEM_PROMPT_V2 !== 'undefined'
+  ? HARLOW_SHOPPING_SYSTEM_PROMPT_V2
+      .replace('{{USER_MEMBERSHIPS}}', profile.memberships.join(', ') || 'none')
+      .replace('{{HOUSEHOLD_SIZE}}', profile.people || 'unknown')
+      .replace('{{KOSHER_REQUIRED}}', (profile.dietary || '').toLowerCase().includes('kosher') ? 'kosher preferred' : 'no')
+  : ''}
 Today's date: ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
 }
 
@@ -747,6 +826,7 @@ function addBubble(role,html,isHTML=false){
   wrap.appendChild(bub);
   msgs.insertBefore(wrap,live);
   live.scrollIntoView({behavior:'smooth'});
+return bub;
 }
 
 function showTyping(){
@@ -818,22 +898,66 @@ async function handleHouseholdCommand(text) {
 }
 // ══ SEND ══
 async function send(text){
-  if(!text.trim()||status==='thinking')return;
- if (await handleHouseholdCommand(text)) return;
+  const cleanText = text.trim();
+
+  if (!cleanText || status === 'thinking') return;
+
+  if (await handleHouseholdCommand(cleanText)) return;
+
   speechSynthesis.cancel();
-  document.getElementById('liveText').textContent='';
-  messages.push({role:'user',content:text});
-  addBubble('user',text);
-  setStatus('thinking');showTyping();
-  try{
-    const reply=await askGroq(messages);
-    messages.push({role:'assistant',content:reply});
+  document.getElementById('liveText').textContent = '';
+
+  addBubble('user', cleanText);
+
+  setStatus('thinking');
+  showTyping();
+
+  let messageForAI = cleanText;
+
+  try {
+    if (typeof handleShoppingRequest === 'function') {
+      const shopping = await handleShoppingRequest(cleanText, {
+        deliveryPreference: getUserProfile().deliveryPreference,
+        priorityPreference: getUserProfile().priorityPreference
+      });
+
+      if (shopping) {
+        hideTyping();
+
+        const cardBubble = addBubble('bot', shopping.html, true);
+
+        if (typeof attachFeedbackHandlers === 'function') {
+          attachFeedbackHandlers(cardBubble);
+        }
+
+        messageForAI += "\n\nStore options from Harlow's shopping engine:\n" + shopping.storeLinks;
+
+        showTyping();
+      }
+    }
+
+    messages.push({
+      role: 'user',
+      content: messageForAI
+    });
+
+    const reply = await askGroq(messages);
+
+    messages.push({
+      role: 'assistant',
+      content: reply
+    });
+
     hideTyping();
-    addBubble('bot',fmt(reply),true);
+    addBubble('bot', fmt(reply), true);
+
     setStatus('speaking');
-    speakText(reply,()=>setStatus('idle'));
-  }catch{
-    hideTyping();showErr('Connection issue — please try again.');setStatus('idle');
+    speakText(reply, () => setStatus('idle'));
+
+  } catch {
+    hideTyping();
+    showErr('Connection issue — please try again.');
+    setStatus('idle');
   }
 }
 
