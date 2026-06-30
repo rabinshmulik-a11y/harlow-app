@@ -644,7 +644,7 @@ async function beginChat(){await loadPurchases();
 }
  async function loadProfileOnStart() {
   try {
-    const res = await fetch('/api/load-profile');
+    const res = await fetch(`/api/load-profile?id=${currentUserId}`);
     const saved = await res.json();
 
     if (saved && saved.household_size) {
